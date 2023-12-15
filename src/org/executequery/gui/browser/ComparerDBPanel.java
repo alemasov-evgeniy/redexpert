@@ -7,6 +7,7 @@ import org.executequery.databaseobjects.NamedObject;
 import org.executequery.databaseobjects.impl.DefaultDatabaseHost;
 import org.executequery.datasource.ConnectionManager;
 import org.executequery.datasource.SimpleDataSource;
+import org.executequery.gui.IconManager;
 import org.executequery.gui.LoggingOutputPanel;
 import org.executequery.gui.browser.comparer.ComparedObject;
 import org.executequery.gui.browser.comparer.Comparer;
@@ -202,7 +203,7 @@ public class ComparerDBPanel extends JPanel implements TabView {
 
         // --- db components tree view ---
 
-        rootTreeNode = new ComparerTreeNode(bundleString("DatabaseChanges"));
+        rootTreeNode = new ComparerTreeNode(-1, NamedObject.BRANCH_NODE, bundleString("DatabaseChanges"), ComparerTreeNode.ROOT);
         dbComponentsTree = new JTree(new DefaultTreeModel(rootTreeNode));
         dbComponentsTree.setCellRenderer(new ComparerTreeCellRenderer());
         dbComponentsTree.addMouseListener(new MouseAdapter() {
@@ -494,7 +495,7 @@ public class ComparerDBPanel extends JPanel implements TabView {
 
         if (propertiesCheckBoxMap.get(CHECK_CREATE).isSelected() && !isCanceled()) {
 
-            rootTreeNode.add(new ComparerTreeNode(ComparerTreeNode.CREATE, bundleString("CreateObjects")));
+            rootTreeNode.add(new ComparerTreeNode(ComparerTreeNode.CREATE, NamedObject.BRANCH_NODE, bundleString("CreateObjects"), ComparerTreeNode.ROOT));
 
             if (isReverseOrder) {
                 isReverseOrder = false;
@@ -532,7 +533,7 @@ public class ComparerDBPanel extends JPanel implements TabView {
 
         if (propertiesCheckBoxMap.get(CHECK_ALTER).isSelected() && !isCanceled()) {
 
-            rootTreeNode.add(new ComparerTreeNode(ComparerTreeNode.ALTER, bundleString("AlterObjects")));
+            rootTreeNode.add(new ComparerTreeNode(ComparerTreeNode.ALTER, NamedObject.BRANCH_NODE, bundleString("AlterObjects"), ComparerTreeNode.ROOT));
 
             if (isReverseOrder) {
                 isReverseOrder = false;
@@ -562,7 +563,7 @@ public class ComparerDBPanel extends JPanel implements TabView {
 
         if (propertiesCheckBoxMap.get(CHECK_DROP).isSelected() && !isCanceled()) {
 
-            rootTreeNode.add(new ComparerTreeNode(ComparerTreeNode.DROP, bundleString("DropObjects")));
+            rootTreeNode.add(new ComparerTreeNode(ComparerTreeNode.DROP, NamedObject.BRANCH_NODE, bundleString("DropObjects"), ComparerTreeNode.ROOT));
 
             if (!isReverseOrder) {
                 isReverseOrder = true;
@@ -1022,6 +1023,11 @@ public class ComparerDBPanel extends JPanel implements TabView {
             return null;
         }
 
+        @Override
+        public String toString() {
+            return name;
+        }
+
     }
 
     private static class ComparerTreeCellRenderer extends AbstractTreeCellRenderer {
@@ -1031,90 +1037,11 @@ public class ComparerDBPanel extends JPanel implements TabView {
                 JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
 
             ComparerTreeNode treeNode = (ComparerTreeNode) value;
-            switch (treeNode.type) {
-
-                case NamedObject.DOMAIN:
-                    setIcon(GUIUtilities.loadIcon("domain16.png"));
-                    break;
-
-                case NamedObject.TABLE:
-                    setIcon(GUIUtilities.loadIcon("PlainTable16.png"));
-                    break;
-
-                case NamedObject.GLOBAL_TEMPORARY:
-                    setIcon(GUIUtilities.loadIcon("GlobalTable16.png"));
-                    break;
-
-                case NamedObject.VIEW:
-                    setIcon(GUIUtilities.loadIcon("TableView16.png"));
-                    break;
-
-                case NamedObject.PROCEDURE:
-                    setIcon(GUIUtilities.loadIcon("Procedure16.png"));
-                    break;
-
-                case NamedObject.FUNCTION:
-                    setIcon(GUIUtilities.loadIcon("Function16.png"));
-                    break;
-
-                case NamedObject.PACKAGE:
-                    setIcon(GUIUtilities.loadIcon("package16.png"));
-                    break;
-
-                case NamedObject.TRIGGER:
-                    setIcon(GUIUtilities.loadIcon("Trigger.png"));
-                    break;
-
-                case NamedObject.DDL_TRIGGER:
-                    setIcon(GUIUtilities.loadIcon("TriggerDDL.png"));
-                    break;
-
-                case NamedObject.DATABASE_TRIGGER:
-                    setIcon(GUIUtilities.loadIcon("TriggerDB.png"));
-                    break;
-
-                case NamedObject.SEQUENCE:
-                    setIcon(GUIUtilities.loadIcon("Sequence16.png"));
-                    break;
-
-                case NamedObject.EXCEPTION:
-                    setIcon(GUIUtilities.loadIcon("exception16.png"));
-                    break;
-
-                case NamedObject.UDF:
-                    setIcon(GUIUtilities.loadIcon("udf16.png"));
-                    break;
-
-                case NamedObject.USER:
-                    setIcon(GUIUtilities.loadIcon("User16.png"));
-                    break;
-
-                case NamedObject.ROLE:
-                    setIcon(GUIUtilities.loadIcon("user_manager_16.png"));
-                    break;
-
-                case NamedObject.INDEX:
-                    setIcon(GUIUtilities.loadIcon("TableIndex16.png"));
-                    break;
-
-                case NamedObject.TABLESPACE:
-                    setIcon(GUIUtilities.loadIcon("tablespace16.png"));
-                    break;
-
-                case NamedObject.JOB:
-                    setIcon(GUIUtilities.loadIcon("job16.png"));
-                    break;
-
-                case NamedObject.COLLATION:
-                    setIcon(GUIUtilities.loadIcon("XmlFile16.png"));
-                    break;
-
-                default:
-                    setIcon(getDefaultOpenIcon());
-                    break;
-
-            }
-
+            Icon icon = IconManager.getInstance().getIconFromType(treeNode.type);
+            if (icon == null)
+                icon = getDefaultOpenIcon();
+            setIcon(icon);
+            setText(treeNode.name);
             Font font = getFont();
             if (treeNode.level == ComparerTreeNode.TYPE_FOLDER && treeNode.getChildCount() > 0) {
                 setText(treeNode.name + " (" + treeNode.getChildCount() + ")");
@@ -1126,7 +1053,6 @@ public class ComparerDBPanel extends JPanel implements TabView {
                 if (font != null)
                     setFont(font.deriveFont(Font.PLAIN));
             }
-
             return this;
         }
 

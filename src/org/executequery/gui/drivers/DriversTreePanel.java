@@ -143,19 +143,19 @@ public class DriversTreePanel extends AbstractDockedTabActionPanel
         PanelToolBar tools = new PanelToolBar();
         newDriverButton = tools.addButton(
                 this, "newDriver",
-                GUIUtilities.getAbsoluteIconPath("NewJDBCDriver16.png"),
+                GUIUtilities.getAbsoluteIconPath("NewJDBCDriver16.svg"),
                 bundleString("newDriver"));
         deleteDriverButton = tools.addButton(
                 this, "deleteDriver",
-                GUIUtilities.getAbsoluteIconPath("Delete16.png"),
+                GUIUtilities.getAbsoluteIconPath("Delete16.svg"),
                 bundleString("deleteDriver"));
         upButton = tools.addButton(
                 this, "moveDriverUp",
-                GUIUtilities.getAbsoluteIconPath("Up16.png"),
+                GUIUtilities.getAbsoluteIconPath("Up16.svg"),
                 bundleString("moveDriverUp"));
         downButton = tools.addButton(
                 this, "moveDriverDown",
-                GUIUtilities.getAbsoluteIconPath("Down16.png"),
+                GUIUtilities.getAbsoluteIconPath("Down16.svg"),
                 bundleString("moveDriverDown"));
 
         // ---
@@ -522,8 +522,8 @@ public class DriversTreePanel extends AbstractDockedTabActionPanel
 
         public DriversTreeCellRenderer() {
 
-            driverRootImage = GUIUtilities.loadIcon("DatabaseDrivers16.png", true);
-            driverImage = GUIUtilities.loadIcon("JDBCDriver16.png", true);
+            driverRootImage = GUIUtilities.loadIcon("DatabaseDrivers16.svg", true);
+            driverImage = GUIUtilities.loadIcon("JDBCDriver16.svg", true);
 
             textBackground = UIManager.getColor("Tree.textBackground");
             textForeground = UIManager.getColor("Tree.textForeground");

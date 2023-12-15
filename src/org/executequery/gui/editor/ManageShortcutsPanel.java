@@ -56,7 +56,7 @@ public class ManageShortcutsPanel extends DefaultActionButtonsPanel
         implements ListSelectionListener {
 
     public static final String TITLE = Bundles.get("ManageShortcutsPanel.title");
-    public static final String FRAME_ICON = "Shortcut16.png";
+    public static final String FRAME_ICON = "Shortcut16.svg";
 
     private static final String SAVE_COMMAND_NAME = "save";
     private static final String CANCEL_COMMAND_NAME = "cancel";
@@ -415,13 +415,13 @@ public class ManageShortcutsPanel extends DefaultActionButtonsPanel
         JButton addButton = ActionUtilities.createToolbarButton(
                 this,
                 "addShortcut",
-                GUIUtilities.loadIcon("ShortcutAdd16.png"),
+                GUIUtilities.loadIcon("ShortcutAdd16.svg"),
                 bundleString("addShortcut"));
 
         JButton deleteButton = ActionUtilities.createToolbarButton(
                 this,
                 "deleteShortcut",
-                GUIUtilities.loadIcon("ShortcutDelete16.png"),
+                GUIUtilities.loadIcon("ShortcutDelete16.svg"),
                 bundleString("deleteShortcut"));
 
         GridBagConstraints gbc = new GridBagConstraints();

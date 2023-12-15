@@ -72,7 +72,7 @@ public class LineNumber extends JComponent {
             componentFontAscent = this.component.getFontMetrics(this.component.getFont()).getAscent();
         }
 
-        ImageIcon icon = GUIUtilities.loadIcon("ExecutingPointer.png", true);
+        ImageIcon icon = GUIUtilities.loadIcon("ExecutingPointer.svg", true);
         iconWidth = icon.getIconWidth();
         iconHeight = icon.getIconHeight();
         executingIcon = icon.getImage();

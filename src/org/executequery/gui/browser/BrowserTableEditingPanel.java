@@ -1305,6 +1305,192 @@ public class BrowserTableEditingPanel extends AbstractFormObjectViewPanel
         }
     }
 
+    private void createButtonsEditingColumnPanel() {
+        buttonsEditingColumnPanel = new JPanel(new GridBagLayout());
+        PanelToolBar bar = new PanelToolBar();
+        RolloverButton addRolloverButton = new RolloverButton();
+        addRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnInsert16.svg"));
+        addRolloverButton.setToolTipText("Insert column");
+        addRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                insertAfter();
+            }
+        });
+        bar.add(addRolloverButton);
+        RolloverButton deleteRolloverButton = new RolloverButton();
+        deleteRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnDelete16.svg"));
+        deleteRolloverButton.setToolTipText("Delete column");
+        deleteRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                deleteRow();
+            }
+        });
+        bar.add(deleteRolloverButton);
+        RolloverButton moveUpButton = new RolloverButton();
+        moveUpButton.setIcon(GUIUtilities.loadIcon("Up16.svg"));
+        moveUpButton.setToolTipText("Move up");
+        moveUpButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                moveColumnUp();
+            }
+        });
+        bar.add(moveUpButton);
+        RolloverButton moveDownButton = new RolloverButton();
+        moveDownButton.setIcon(GUIUtilities.loadIcon("Down16.svg"));
+        moveDownButton.setToolTipText("Move down");
+        moveDownButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                moveColumnDown();
+            }
+        });
+        bar.add(moveDownButton);
+        RolloverButton commitRolloverButton = new RolloverButton();
+        commitRolloverButton.setIcon(GUIUtilities.loadIcon("Commit16.svg"));
+        commitRolloverButton.setToolTipText("Commit");
+        commitRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+
+
+                try {
+                    DatabaseObjectChangeProvider docp = new DatabaseObjectChangeProvider(table);
+                    if (docp.applyDefinitionChanges())
+                        setValues(table);
+
+                } catch (DataSourceException e) {
+                    GUIUtilities.displayExceptionErrorDialog(e.getMessage(), e);
+                }
+            }
+        });
+        bar.add(commitRolloverButton);
+        RolloverButton rollbackRolloverButton = new RolloverButton();
+        rollbackRolloverButton.setIcon(GUIUtilities.loadIcon("Rollback16.svg"));
+        rollbackRolloverButton.setToolTipText("Rollback");
+        rollbackRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                table.reset();
+                setValues(table);
+            }
+        });
+        bar.add(rollbackRolloverButton);
+        GridBagConstraints gbc3 = new GridBagConstraints(4, 0, 1, 1, 1.0, 1.0,
+                GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0);
+        buttonsEditingColumnPanel.add(bar, gbc3);
+    }
+
+    private void createButtonsEditingConstraintPanel() {
+        buttonsEditingConstraintPanel = new JPanel(new GridBagLayout());
+        PanelToolBar bar = new PanelToolBar();
+        RolloverButton addRolloverButton = new RolloverButton();
+        addRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnInsert16.svg"));
+        addRolloverButton.setToolTipText("Insert constraint");
+        addRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                insertAfter();
+            }
+        });
+        bar.add(addRolloverButton);
+        RolloverButton deleteRolloverButton = new RolloverButton();
+        deleteRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnDelete16.svg"));
+        deleteRolloverButton.setToolTipText("Delete constraint");
+        deleteRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                deleteRow();
+            }
+        });
+        bar.add(deleteRolloverButton);
+        RolloverButton commitRolloverButton = new RolloverButton();
+        commitRolloverButton.setIcon(GUIUtilities.loadIcon("Commit16.svg"));
+        commitRolloverButton.setToolTipText("Commit");
+        commitRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+
+
+                try {
+                    DatabaseObjectChangeProvider docp = new DatabaseObjectChangeProvider(table);
+                    if (docp.applyDefinitionChanges())
+                        setValues(table);
+
+                } catch (DataSourceException e) {
+                    GUIUtilities.displayExceptionErrorDialog(e.getMessage(), e);
+                }
+            }
+        });
+        bar.add(commitRolloverButton);
+        RolloverButton rollbackRolloverButton = new RolloverButton();
+        rollbackRolloverButton.setIcon(GUIUtilities.loadIcon("Rollback16.svg"));
+        rollbackRolloverButton.setToolTipText("Rollback");
+        rollbackRolloverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                table.revert();
+                setValues(table);
+            }
+        });
+        bar.add(rollbackRolloverButton);
+        GridBagConstraints gbc3 = new GridBagConstraints(4, 0, 1, 1, 1.0, 1.0,
+                GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0);
+        buttonsEditingConstraintPanel.add(bar, gbc3);
+    }
+
+    private void createButtonsEditingIndexesPanel() {
+        buttonsEditingIndexesPanel = new AbstractToolBarForTableIndexes("Create Index", "Delete Index", "Refresh", "Reselectivity") {
+
+            @Override
+            public void insert(ActionEvent e) {
+                insertAfter();
+            }
+
+            @Override
+            public void delete(ActionEvent e) {
+                deleteRow();
+            }
+
+            @Override
+            public void refresh(ActionEvent e) {
+                if (table instanceof DefaultDatabaseTable)
+                    ((DefaultDatabaseTable) table).clearIndexes();
+                loadIndexes();
+            }
+
+            @Override
+            public void reselectivity(ActionEvent e) {
+                reselectivityAllIndexes();
+            }
+        };
+
+    }
+
+    private void createButtonsEditingTriggersPanel() {
+        buttonsEditingTriggersPanel = new AbstractToolBarForTable("Create Trigger", "Delete Trigger", "Refresh") {
+            @Override
+            public void insert(ActionEvent e) {
+                insertAfter();
+            }
+
+            @Override
+            public void delete(ActionEvent e) {
+                deleteRow();
+            }
+
+            @Override
+            public void refresh(ActionEvent e) {
+                if (table instanceof DefaultDatabaseTable)
+                    ((DefaultDatabaseTable) table).clearTriggers();
+                loadTriggers();
+            }
+        };
+    }
+
+
     public boolean commitResultSet() {
         try {
 

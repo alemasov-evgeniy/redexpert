@@ -29,6 +29,7 @@ import org.executequery.databaseobjects.DatabaseTable;
 import org.executequery.databaseobjects.NamedObject;
 import org.executequery.databaseobjects.impl.*;
 import org.executequery.gui.BaseDialog;
+import org.executequery.gui.IconManager;
 import org.executequery.gui.browser.nodes.DatabaseObjectNode;
 import org.executequery.gui.databaseobjects.AbstractCreateObjectPanel;
 import org.executequery.gui.databaseobjects.CreateIndexPanel;
@@ -115,8 +116,8 @@ public class BrowserController {
 
         String title = (viewPanel.getNameObject() != null) ? viewPanel.getNameObject() : BrowserViewPanel.TITLE;
 
-        if (GUIUtilities.getCentralPane(title) == null) {
-            GUIUtilities.addCentralPane(title, BrowserViewPanel.FRAME_ICON, viewPanel, title, true);
+        if (_viewPanel == null) {
+            GUIUtilities.addCentralPane(title, viewPanel.getIcon(), viewPanel, title, true);
             ConnectionHistory.add(viewPanel.getCurrentView());
         } else
             GUIUtilities.setSelectedCentralPane(title);
@@ -198,6 +199,7 @@ public class BrowserController {
 
             panel.setDatabaseConnection(connection);
             viewPanel.setView(panel);
+            viewPanel.setIcon(IconManager.getInstance().getIconFromNode(node));
             checkBrowserPanel();
 
             if (viewPanel.getCurrentView() != null)

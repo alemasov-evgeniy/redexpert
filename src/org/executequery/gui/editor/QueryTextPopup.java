@@ -384,16 +384,16 @@ class QueryTextPopup extends JPanel
             linkButton.addActionListener(this);
             linkButton.addMouseListener(QueryTextPopup.this);
 
-            previousButton = createButton("PreviousResultSetQuery16.png",
+            previousButton = createButton("PreviousResultSetQuery16.svg",
                     "previous", bundleString("PreviousExecutedResultSet"));
 
-            nextButton = createButton("NextResultSetQuery16.png",
+            nextButton = createButton("NextResultSetQuery16.svg",
                     "next", bundleString("NextExecutedResultSet"));
 
-            copyButton = createButton("Copy16.png",
+            copyButton = createButton("Copy16.svg",
                     "copy", bundleString("Copy"));
 
-            goToButton = createButton("GoToResultSetQuery16.png",
+            goToButton = createButton("GoToResultSetQuery16.svg",
                     "goToQuery", bundleString("GoTo"));
 
             GridBagConstraints gbc = new GridBagConstraints();

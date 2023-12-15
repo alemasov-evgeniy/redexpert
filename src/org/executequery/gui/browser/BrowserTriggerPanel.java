@@ -164,7 +164,7 @@ public class BrowserTriggerPanel extends AbstractFormObjectViewPanel {
         //base.add(schemaNameField, gbc);
 
         setHeaderText("Database Procedure");
-        setHeaderIcon(GUIUtilities.loadIcon("Procedure24.png", true));
+        setHeaderIcon(GUIUtilities.loadIcon("Procedure24.svg", true));
         setContentPanel(base);
         cache = new HashMap();
 
@@ -206,7 +206,7 @@ public class BrowserTriggerPanel extends AbstractFormObjectViewPanel {
         dependenciesPanel.setDatabaseObject(trigger);
         objectNameLabel.setText(bundleString("TriggerName"));
         setHeaderText(bundleString("DatabaseTrigger"));
-        setHeaderIcon(GUIUtilities.loadIcon("TableTrigger16.png", true));
+        setHeaderIcon(GUIUtilities.loadIcon("TableTrigger16.svg", true));
 
         try {
             triggerNameField.setText(trigger.getName());
@@ -251,7 +251,7 @@ public class BrowserTriggerPanel extends AbstractFormObjectViewPanel {
 
         objectNameLabel.setText(bundleString("TriggerName"));
         setHeaderText(bundleString("Database Trigger"));
-        setHeaderIcon("Trigger16.png");
+        setHeaderIcon("Trigger16.svg");
 
         if (trigger != null) {
             triggerNameField.setText(trigger.getName());
