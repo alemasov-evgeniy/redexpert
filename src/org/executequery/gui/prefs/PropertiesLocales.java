@@ -69,7 +69,9 @@ public class PropertiesLocales extends AbstractPropertiesBasePanel
         selectedLocaleField = new DisabledField();
         selectedTimeZoneField = new DisabledField();
 
-        locales = Locale.getAvailableLocales();
+        locales = new Locale[2];//Locale.getAvailableLocales();
+        locales[0] = Locale.forLanguageTag("en");
+        locales[1] = Locale.forLanguageTag("ru");
         timezones = TimeZone.getAvailableIDs();
 
         Arrays.sort(locales, new LocalesComparator());
