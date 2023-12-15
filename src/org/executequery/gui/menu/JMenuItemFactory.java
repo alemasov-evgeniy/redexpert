@@ -51,8 +51,12 @@ public class JMenuItemFactory {
             } else {
 
                 if (menuItem.hasId()) {
-
-                    jMenuItem.setAction(actionForMenuItem(menuItem));
+                    Action action = actionForMenuItem(menuItem);
+                    jMenuItem.setAction(action);
+                    //Log.info(jMenuItem.getAction());
+                    if (action.getValue(Action.SMALL_ICON) != null){
+                        jMenuItem.setIcon((Icon) action.getValue(Action.SMALL_ICON));
+                    }
                 }
 
                 if (menuItem.hasName()) {
@@ -94,7 +98,7 @@ public class JMenuItemFactory {
             System.out.println(menuItem.getImplementingClass());
         }
 
-        jMenuItem.setIcon(null);
+        //jMenuItem.setIcon(null);
 
         return jMenuItem;
     }

@@ -142,10 +142,11 @@ public class ApplicationLauncher {
 
             // initialise the actions from actions.xml
             ActionBuilder.build(GUIUtilities.getActionMap(),
-                    GUIUtilities.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW),
+                        GUIUtilities.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW),
                     Constants.ACTION_CONF_PATH);
 
             advanceSplash(splash);
+
 
             // build the tool bar
             GUIUtilities.createToolBar();

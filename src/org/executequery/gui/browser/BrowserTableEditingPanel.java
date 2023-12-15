@@ -306,151 +306,11 @@ public class BrowserTableEditingPanel extends AbstractFormObjectViewPanel
         createButtonsEditingConstraintPanel();
     }
 
-    private void createButtonsEditingIndexesPanel() {
-
-        buttonsEditingIndexesPanel = new AbstractToolBarForTableIndexes(
-                "Create Index",
-                "Delete Index",
-                "Refresh",
-                "Selectivity"
-        ) {
-
-            @Override
-            public void insert(ActionEvent e) {
-                insertAfter();
-            }
-
-            @Override
-            public void delete(ActionEvent e) {
-                deleteRow();
-            }
-
-            @Override
-            public void refresh(ActionEvent e) {
-                if (table instanceof DefaultDatabaseTable)
-                    ((DefaultDatabaseTable) table).clearIndexes();
-                loadIndexes();
-            }
-
-            @Override
-            public void reselectivity(ActionEvent e) {
-                reselectAllIndexes();
-            }
-        };
-    }
-
-    private void createButtonsEditingTriggersPanel() {
-        buttonsEditingTriggersPanel = new AbstractToolBarForTable(
-                "Create Trigger",
-                "Delete Trigger",
-                "Refresh"
-        ) {
-            @Override
-            public void insert(ActionEvent e) {
-                insertAfter();
-            }
-
-            @Override
-            public void delete(ActionEvent e) {
-                deleteRow();
-            }
-
-            @Override
-            public void refresh(ActionEvent e) {
-                if (table instanceof DefaultDatabaseTable)
-                    ((DefaultDatabaseTable) table).clearTriggers();
-                loadTriggers();
-            }
-        };
-    }
-
-    private void createButtonsEditingColumnPanel() {
-
-        PanelToolBar bar = new PanelToolBar();
-
-        RolloverButton addRolloverButton = new RolloverButton();
-        addRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnInsert16.png"));
-        addRolloverButton.setToolTipText("Insert column");
-        addRolloverButton.addActionListener(actionEvent -> insertAfter());
-        bar.add(addRolloverButton);
-
-        RolloverButton deleteRolloverButton = new RolloverButton();
-        deleteRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnDelete16.png"));
-        deleteRolloverButton.setToolTipText("Delete column");
-        deleteRolloverButton.addActionListener(actionEvent -> deleteRow());
-        bar.add(deleteRolloverButton);
-
-        RolloverButton moveUpButton = new RolloverButton();
-        moveUpButton.setIcon(GUIUtilities.loadIcon("Up16.png"));
-        moveUpButton.setToolTipText("Move up");
-        moveUpButton.addActionListener(actionEvent -> moveColumnUp());
-        bar.add(moveUpButton);
-
-        RolloverButton moveDownButton = new RolloverButton();
-        moveDownButton.setIcon(GUIUtilities.loadIcon("Down16.png"));
-        moveDownButton.setToolTipText("Move down");
-        moveDownButton.addActionListener(actionEvent -> moveColumnDown());
-        bar.add(moveDownButton);
-
-        RolloverButton commitRolloverButton = new RolloverButton();
-        commitRolloverButton.setIcon(GUIUtilities.loadIcon("Commit16.png"));
-        commitRolloverButton.setToolTipText("Commit");
-        commitRolloverButton.addActionListener(actionEvent -> commitColumnsChanges());
-        bar.add(commitRolloverButton);
-
-        RolloverButton rollbackRolloverButton = new RolloverButton();
-        rollbackRolloverButton.setIcon(GUIUtilities.loadIcon("Rollback16.png"));
-        rollbackRolloverButton.setToolTipText("Rollback");
-        rollbackRolloverButton.addActionListener(actionEvent -> refresh());
-        bar.add(rollbackRolloverButton);
-
-        buttonsEditingColumnPanel = new JPanel(new GridBagLayout());
-        buttonsEditingColumnPanel.add(bar, new GridBagConstraints(
-                4, 0, 1, 1, 1.0, 1.0,
-                GridBagConstraints.CENTER,
-                GridBagConstraints.HORIZONTAL,
-                new Insets(0, 0, 0, 0),
-                0, 0
-        ));
-    }
-
-    private void createButtonsEditingConstraintPanel() {
 
 
-        PanelToolBar bar = new PanelToolBar();
-        RolloverButton addRolloverButton = new RolloverButton();
-        addRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnInsert16.png"));
-        addRolloverButton.setToolTipText("Insert constraint");
-        addRolloverButton.addActionListener(actionEvent -> insertAfter());
-        bar.add(addRolloverButton);
 
-        RolloverButton deleteRolloverButton = new RolloverButton();
-        deleteRolloverButton.setIcon(GUIUtilities.loadIcon("ColumnDelete16.png"));
-        deleteRolloverButton.setToolTipText("Delete constraint");
-        deleteRolloverButton.addActionListener(actionEvent -> deleteRow());
-        bar.add(deleteRolloverButton);
 
-        RolloverButton commitRolloverButton = new RolloverButton();
-        commitRolloverButton.setIcon(GUIUtilities.loadIcon("Commit16.png"));
-        commitRolloverButton.setToolTipText("Commit");
-        commitRolloverButton.addActionListener(actionEvent -> commitColumnsChanges());
-        bar.add(commitRolloverButton);
 
-        RolloverButton rollbackRolloverButton = new RolloverButton();
-        rollbackRolloverButton.setIcon(GUIUtilities.loadIcon("Rollback16.png"));
-        rollbackRolloverButton.setToolTipText("Rollback");
-        rollbackRolloverButton.addActionListener(actionEvent -> refresh());
-        bar.add(rollbackRolloverButton);
-
-        buttonsEditingConstraintPanel = new JPanel(new GridBagLayout());
-        buttonsEditingConstraintPanel.add(bar, new GridBagConstraints(
-                4, 0, 1, 1, 1.0, 1.0,
-                GridBagConstraints.CENTER,
-                GridBagConstraints.HORIZONTAL,
-                new Insets(0, 0, 0, 0),
-                0, 0
-        ));
-    }
 
     private void arrange() {
 
@@ -1381,6 +1241,18 @@ public class BrowserTableEditingPanel extends AbstractFormObjectViewPanel
         GridBagConstraints gbc3 = new GridBagConstraints(4, 0, 1, 1, 1.0, 1.0,
                 GridBagConstraints.CENTER, GridBagConstraints.HORIZONTAL, new Insets(0, 0, 0, 0), 0, 0);
         buttonsEditingColumnPanel.add(bar, gbc3);
+    }
+
+    public void reselectivityAllIndexes() {
+        DatabaseConnection dc = table.getHost().getDatabaseConnection();
+        StringBuilder sb = new StringBuilder();
+        List<DefaultDatabaseIndex> indexes = table.getIndexes();
+        for (DefaultDatabaseIndex node : indexes) {
+            sb.append("SET STATISTICS INDEX ").append(MiscUtils.getFormattedObject(node.getName(), dc)).append(";\n");
+            node.reset();
+        }
+        ExecuteQueryDialog eqd = new ExecuteQueryDialog(bundledString("Recompute"), sb.toString(), dc, true, ";", true, false);
+        eqd.display();
     }
 
     private void createButtonsEditingConstraintPanel() {

@@ -39,6 +39,7 @@ import org.executequery.log.Log;
 import org.underworldlabs.jdbc.DataSourceException;
 import org.underworldlabs.util.MiscUtils;
 
+import javax.swing.*;
 import java.util.Objects;
 import java.util.Vector;
 
@@ -116,6 +117,7 @@ public class BrowserController {
 
         String title = (viewPanel.getNameObject() != null) ? viewPanel.getNameObject() : BrowserViewPanel.TITLE;
 
+        JPanel _viewPanel = GUIUtilities.getCentralPane(title);
         if (_viewPanel == null) {
             GUIUtilities.addCentralPane(title, viewPanel.getIcon(), viewPanel, title, true);
             ConnectionHistory.add(viewPanel.getCurrentView());
