@@ -87,7 +87,7 @@ public class CreateProcedureToolBar extends JPanel
         insertAfterButton = ActionUtilities.createToolbarButton(
                 this,
                 GUIUtilities.getAbsoluteIconPath("ColumnInsertAfter16.svg"),
-                "Insert a value after the current selection", 
+                "Insert a value after the current selection",
                 null);
 
         insertBeforeButton = ActionUtilities.createToolbarButton(
@@ -102,30 +102,49 @@ public class CreateProcedureToolBar extends JPanel
                 "Delete the selected value",
                 null);
 
+//        moveUpButton = ActionUtilities.createToolbarButton(
+//                this,
+//                "Up16.svg",
+//                "Move the selection up",
+//                null);
+//
+//        moveDownButton = ActionUtilities.createToolbarButton(
+//                this,
+//                "Down16.svg",
+//                "Move the selection down",
+//                null);
+
         GridBagHelper gbh = new GridBagHelper();
+//        GridBagHelper gbh = new GridBagHelper();
         gbh.setDefaults(GridBagHelper.DEFAULT_CONSTRAINTS);
         gbh.defaults();
         gbh.anchorNorth();
-        gbh.setInsets(0, 2, 0, 0);
+        gbh.setInsets(0, 0, 0, 1);
         add(insertAfterButton, gbh.get());
         add(insertBeforeButton, gbh.nextRow().get());
         add(deleteRowButton, gbh.nextRow().get());
 
+//        add(moveUpButton, gbh.nextRow().get());
+//        add(moveDownButton, gbh.nextRow().get());
+//        add(new JPanel(), gbh.nextRow().spanY().get());
+
         if (canMove) {
             moveUpButton = ActionUtilities.createToolbarButton(
                     this,
-                    "Up16.svg",
+//                    "Up16.svg",
+                    GUIUtilities.getAbsoluteIconPath("Up16.svg"),
                     "Move the selection up",
                     null);
 
             moveDownButton = ActionUtilities.createToolbarButton(
                     this,
-                    "Down16.svg",
+                    GUIUtilities.getAbsoluteIconPath("Down16.svg"),
+//                    "Down16.svg",
                     "Move the selection down",
                     null);
             add(moveUpButton, gbh.nextRow().get());
             add(moveDownButton, gbh.nextRow().get());
-            add(new JPanel(), gbh.nextRow().spanY().get());
+//            add(new JPanel(), gbh.nextRow().spanY().get());
         }
         
     }
@@ -138,7 +157,7 @@ public class CreateProcedureToolBar extends JPanel
      */
     public void enableButtons(boolean enable) {
         insertBeforeButton.setEnabled(enable);
-        
+
         if (canMove) {
             moveUpButton.setEnabled(enable);
             moveDownButton.setEnabled(enable);

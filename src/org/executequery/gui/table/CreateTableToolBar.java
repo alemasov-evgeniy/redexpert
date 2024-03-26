@@ -127,14 +127,16 @@ public class CreateTableToolBar extends JPanel implements ActionListener {
 
             moveUpButton = ActionUtilities.createToolbarButton(
                     this,
-                    "Up16.svg",
+                    GUIUtilities.getAbsoluteIconPath("Up16.svg"),
+//                    "Up16.svg",
                     bundleString("MoveUp"),
                     null
             );
 
             moveDownButton = ActionUtilities.createToolbarButton(
                     this,
-                    "Down16.svg",
+//                    "Down16.svg",
+                    GUIUtilities.getAbsoluteIconPath("Down16.svg"),
                     bundleString("MoveDown"),
                     null
             );
