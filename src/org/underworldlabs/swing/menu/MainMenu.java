@@ -43,13 +43,15 @@ public class MainMenu extends JMenu {
         return new Insets(0, 0, 0, 10);
     }
 
-    public Dimension getPreferredSize() {
-
-        Dimension preferredSize = super.getPreferredSize();
-        preferredSize.height = Math.max(getHeight(), GUIConstants.DEFAULT_MENU_HEIGHT);
-
-        return preferredSize;
-    }
+//    public Dimension getPreferredSize() {
+//
+//        Dimension preferredSize = super.getPreferredSize();
+//        preferredSize.height = 25;
+//
+////        preferredSize.height = Math.max(getHeight(), GUIConstants.DEFAULT_MENU_HEIGHT);
+//
+//        return preferredSize;
+//    }
 
 }
 
