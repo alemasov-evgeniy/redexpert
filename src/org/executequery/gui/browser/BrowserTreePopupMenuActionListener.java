@@ -85,19 +85,22 @@ public class BrowserTreePopupMenuActionListener extends ReflectiveAction {
     }
 
     public void deleteObject(ActionEvent e) {
+
         if (currentPath != null && currentSelection != null) {
+
             DatabaseObjectNode node = (DatabaseObjectNode) currentPath.getLastPathComponent();
             DatabaseObject object = (DatabaseObject) node.getUserObject();
+
             StringBuilder sb = new StringBuilder();
-            sb.append(node.getShortName());
-            sb.append(":");
-            sb.append(node.getMetaDataKey());
-            sb.append(":");
-            sb.append(object.getHost());
+            sb.append(node.getShortName())
+                    .append(":").append(node.getMetaDataKey())
+                    .append(":").append(object.getHost());
+
             if (GUIUtilities.getOpenFrame(sb.toString()) != null) {
                 GUIUtilities.displayErrorMessage(bundledString("messageInUse", node.getShortName()));
                 return;
             }
+
             String type;
             if (node.getType() == NamedObject.GLOBAL_TEMPORARY)
                 type = NamedObject.META_TYPES[NamedObject.TABLE];
@@ -105,13 +108,23 @@ public class BrowserTreePopupMenuActionListener extends ReflectiveAction {
                 type = NamedObject.META_TYPES[NamedObject.TRIGGER];
             else
                 type = NamedObject.META_TYPES[node.getType()];
+
+            DatabaseObjectNode indecesNode = null;
+            if (node.getMetaDataKey().contains(NamedObject.META_TYPES[NamedObject.TABLE]))
+                indecesNode = ((DatabaseHostNode) node.getParent().getParent()).getChildObjects().stream()
+                        .filter(child -> child.getMetaDataKey().contains(NamedObject.META_TYPES[NamedObject.INDEX]))
+                        .findFirst().orElse(null);
+
             String query = "DROP " + type + " " + MiscUtils.getFormattedObject(node.getName(), currentSelection);
             ExecuteQueryDialog eqd = new ExecuteQueryDialog("Dropping object", query, currentSelection, true);
             eqd.display();
-            if (eqd.getCommit())
-                treePanel.reloadPath(currentPath.getParentPath());
-        }
 
+            if (eqd.getCommit()) {
+                treePanel.reloadPath(currentPath.getParentPath());
+                if (indecesNode != null)
+                    treePanel.reloadPath(indecesNode.getTreePath());
+            }
+        }
     }
 
     public void createObject(ActionEvent e) {
@@ -332,16 +345,16 @@ public class BrowserTreePopupMenuActionListener extends ReflectiveAction {
                     }
                     break;
                 case NamedObject.USER:
-                    if (GUIUtilities.isDialogOpen(CreateUserPanel.CREATE_TITLE)) {
+                    if (GUIUtilities.isDialogOpen(CreateDatabaseUserPanel.CREATE_TITLE)) {
 
-                        GUIUtilities.setSelectedDialog(CreateUserPanel.CREATE_TITLE);
+                        GUIUtilities.setSelectedDialog(CreateDatabaseUserPanel.CREATE_TITLE);
 
                     } else {
                         try {
                             GUIUtilities.showWaitCursor();
                             BaseDialog dialog =
-                                    new BaseDialog(CreateUserPanel.CREATE_TITLE, false);
-                            CreateUserPanel panel = new CreateUserPanel(currentSelection, dialog);
+                                    new BaseDialog(CreateDatabaseUserPanel.CREATE_TITLE, false);
+                            CreateDatabaseUserPanel panel = new CreateDatabaseUserPanel(currentSelection, dialog);
                             showDialogCreateObject(panel, dialog);
                         } finally {
                             GUIUtilities.showNormalCursor();
@@ -597,16 +610,16 @@ public class BrowserTreePopupMenuActionListener extends ReflectiveAction {
                 }
                 break;
             case NamedObject.USER:
-                if (GUIUtilities.isDialogOpen(CreateUserPanel.EDIT_TITLE)) {
+                if (GUIUtilities.isDialogOpen(CreateDatabaseUserPanel.EDIT_TITLE)) {
 
-                    GUIUtilities.setSelectedDialog(CreateUserPanel.EDIT_TITLE);
+                    GUIUtilities.setSelectedDialog(CreateDatabaseUserPanel.EDIT_TITLE);
 
                 } else {
                     try {
                         GUIUtilities.showWaitCursor();
 
-                        BaseDialog dialog = new BaseDialog(CreateUserPanel.EDIT_TITLE, false);
-                        createObjectPanel = new CreateUserPanel(currentSelection, dialog, (DefaultDatabaseUser) node.getDatabaseObject());
+                        BaseDialog dialog = new BaseDialog(CreateDatabaseUserPanel.EDIT_TITLE, false);
+                        createObjectPanel = new CreateDatabaseUserPanel(currentSelection, dialog, (DefaultDatabaseUser) node.getDatabaseObject());
                         showDialogCreateObject(createObjectPanel, dialog);
                     } finally {
                         GUIUtilities.showNormalCursor();
@@ -710,15 +723,8 @@ public class BrowserTreePopupMenuActionListener extends ReflectiveAction {
     }
 
     public void duplicate(ActionEvent e) {
-
-        if (currentSelection != null) {
-
-            String name = treePanel.buildConnectionName(
-                    currentSelection.getName() + " (" + Bundles.getCommon("copy")) + ")";
-            DatabaseConnection dc = currentSelection.copy().withName(name);
-            treePanel.newConnection(dc);
-        }
-
+        if (currentSelection != null)
+            treePanel.newConnection(currentSelection.copy());
     }
 
     public void duplicateWithSource(ActionEvent e) {

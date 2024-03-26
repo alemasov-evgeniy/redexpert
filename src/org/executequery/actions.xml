@@ -494,7 +494,7 @@
             name="Export Result Set"
             accel-editable="false"
             small-icon="/org/executequery/icons/ExportDelimited16.svg"
-            execute-class="org.executequery.actions.othercommands.ExportResultsTableCommand"/>
+            execute-class="org.executequery.actions.othercommands.ExportDataCommand"/>
 
     <action id="editor-show-hide-rs-columns-command"
             name="Visible Result Set Columns"
@@ -602,13 +602,13 @@
             execute-class="org.executequery.actions.databasecommands.CreateSequenceCommand"/>
 
     <action id="generate-scripts-command"
-            name="Generate SQL Scripts"
+            name="Extract database metadata"
             mnemonic="S"
             accel-editable="true"
             small-icon="/org/executequery/icons/CreateScripts16.svg"
             large-icon="/org/executequery/icons/CreateScripts24.svg"
-            description="Generates SQL CREATE TABLE scripts"
-            execute-class="org.executequery.actions.databasecommands.GenerateScriptsCommand"/>
+            description="Extract database metadata into SQL script"
+            execute-class="org.executequery.actions.toolscommands.ExportDbMetadataCommands"/>
 
     <action id="help-command"
             name="Help Topics"
@@ -712,19 +712,10 @@
             large-icon="/org/executequery/icons/ExportDelimited24.svg"
             execute-class="org.executequery.actions.toolscommands.ExportDelimitedCommand"/>
 
-    <action id="export-resultset-command"
-            name="Export Result Set"
-            description="Execute SQL SELECT statements writing results direct to file"
-            mnemonic="X"
-            accel-editable="true"
-            small-icon="/org/executequery/icons/ExportDelimited16.svg"
-            large-icon="/org/executequery/icons/ExportDelimited24.svg"
-            execute-class="org.executequery.actions.databasecommands.ExportResultSetCommand"/>
-
     <action id="import-data-from-file-command"
             name="Import data from file"
             description="Import data into database from local files (*.csv, *.xlsx, ...)"
-            execute-class="org.executequery.actions.databasecommands.ImportDataFromFileCommand"/>
+            execute-class="org.executequery.actions.databasecommands.ImportDataCommand"/>
 
     <action id="table-validation-command"
             name="Table Validation"
@@ -939,6 +930,13 @@
             accel-editable="true"
             description="Trace Manager"
             execute-class="org.executequery.actions.toolscommands.TraceManagerCommands"/>
+
+    <action id="database-statistic-command"
+            name="Database Statistic"
+            mnemonic="DS"
+            accel-editable="true"
+            description="Database Statistic"
+            execute-class="org.executequery.actions.toolscommands.DatabaseStatisticCommands"/>
 
     <action id="profiler-command"
             name="Profiler"

@@ -24,12 +24,14 @@ import org.executequery.Constants;
 import org.executequery.databasemediators.DatabaseConnection;
 import org.executequery.databaseobjects.DatabaseHost;
 import org.executequery.databaseobjects.NamedObject;
+import org.executequery.databaseobjects.impl.DefaultDatabaseHost;
 import org.executequery.databaseobjects.impl.DefaultDatabaseIndex;
 import org.executequery.databaseobjects.impl.DefaultDatabaseTrigger;
 import org.executequery.gui.IconManager;
 import org.executequery.gui.browser.ConnectionsTreePanel;
 import org.executequery.gui.browser.nodes.DatabaseObjectNode;
 import org.executequery.localization.Bundles;
+import org.executequery.log.Log;
 import org.underworldlabs.swing.plaf.UIUtils;
 import org.underworldlabs.swing.tree.AbstractTreeCellRenderer;
 import org.underworldlabs.util.MiscUtils;
@@ -107,42 +109,41 @@ public class BrowserTreeCellRenderer extends AbstractTreeCellRenderer {
      *
      * @return the Component that the renderer uses to draw the value
      */
-    public Component getTreeCellRendererComponent(JTree tree,
-                                                  Object value,
-                                                  boolean isSelected,
-                                                  boolean isExpanded,
-                                                  boolean isLeaf,
-                                                  int row,
-                                                  boolean hasFocus) {
+    @Override
+    public Component getTreeCellRendererComponent(
+            JTree tree,
+            Object value,
+            boolean isSelected,
+            boolean isExpanded,
+            boolean isLeaf,
+            int row,
+            boolean hasFocus) {
 
         this.hasFocus = hasFocus;
-        DefaultMutableTreeNode child = (DefaultMutableTreeNode) value;
 
+        DefaultMutableTreeNode child = (DefaultMutableTreeNode) value;
         DatabaseObjectNode node = (DatabaseObjectNode) child;
-        int type = node.getType();
 
         String label = node.getDisplayName();
         NamedObject databaseObject = node.getDatabaseObject();
 
         setIcon(IconManager.getInstance().getIconFromNode(node));
 
+        int type = node.getType();
         if (type == NamedObject.HOST) {
-
-            DatabaseConnection connection =
-                    ((DatabaseHost) databaseObject).getDatabaseConnection();
-            setToolTipText(buildToolTip(connection));
-
-        } else {
-
-            if (databaseObject != null) {
-
-                setToolTipText(databaseObject.getDescription());
-
-            } else {
-
+            try {
+                DatabaseConnection connection = ((DatabaseHost) databaseObject).getDatabaseConnection();
+                setToolTipText(buildToolTip(connection));
+            } catch (Exception e) {
+                Log.error("Error genarating connection tooltip", e);
                 setToolTipText(label);
             }
-        }
+
+        } else if (databaseObject != null) {
+            setToolTipText(databaseObject.getDescription());
+
+        } else
+            setToolTipText(label);
 
         setBackgroundSelectionColor(selectedBackground);
 
@@ -219,12 +220,12 @@ public class BrowserTreeCellRenderer extends AbstractTreeCellRenderer {
         sb.append("</td></tr><td>").append(bundleString("User")).append("</td><td></td><td>");
         sb.append(connection.getUserName());
         sb.append("</td></tr><td>").append(bundleString("Driver")).append("</td><td></td><td>");
-        sb.append(connection.isConnected() ? ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(connection).getDatabaseProperties().get("Driver") : connection.getDriverName());
+        sb.append(connection.isConnected() ? ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(connection).getDatabaseProperties().get(Bundles.get(DefaultDatabaseHost.class, "Driver")) : connection.getDriverName());
         if (connection.isConnected()) {
             sb.append("</td></tr><td>").append(bundleString("ServerVersion")).append("</td><td></td><td>");
-            sb.append(ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(connection).getDatabaseProperties().get("Server version"));
+            sb.append(ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(connection).getDatabaseProperties().get(Bundles.get(DefaultDatabaseHost.class, "ServerVersion")));
             sb.append("</td></tr><td>").append(bundleString("ODSVersion")).append("</td><td></td><td>");
-            sb.append(ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(connection).getDatabaseProperties().get("ODS version"));
+            sb.append(ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(connection).getDatabaseProperties().get(Bundles.get(DefaultDatabaseHost.class, "ODS_VERSION")));
         }
         sb.append("</td></tr>");
         sb.append(Constants.TABLE_TAG_END);

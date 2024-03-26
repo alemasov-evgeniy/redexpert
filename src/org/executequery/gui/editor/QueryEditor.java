@@ -33,6 +33,7 @@ import org.executequery.gui.FocusablePanel;
 import org.executequery.gui.SaveFunction;
 import org.executequery.gui.WidgetFactory;
 import org.executequery.gui.components.SelectConnectionsPanel;
+import org.executequery.gui.exportData.ExportDataPanel;
 import org.executequery.gui.resultset.ResultSetTable;
 import org.executequery.gui.resultset.ResultSetTableModel;
 import org.executequery.gui.text.TextEditor;
@@ -596,16 +597,16 @@ public class QueryEditor extends DefaultTabView
      * @param resultSet     the executed result set
      * @param showRowNumber to return the result set row count
      */
-    public int setResultSet(ResultSet resultSet, boolean showRowNumber) throws SQLException {
+    public int setResultSet(ResultSet resultSet, boolean showRowNumber, DatabaseConnection dc) throws SQLException {
 
         int rowCount = -1;
 
         if (!executeToFileCheckBox.isSelected()) {
-            rowCount = resultsPanel.setResultSet(resultSet, showRowNumber, getMaxRecords());
+            rowCount = resultsPanel.setResultSet(resultSet, showRowNumber, getMaxRecords(), dc);
             revalidate();
 
         } else
-            new QueryEditorResultsExporter(new ResultSetTableModel(resultSet, -1, false), getDisplayName());
+            new ExportDataPanel(resultSet, getDisplayName());
 
         return rowCount;
     }
@@ -615,14 +616,14 @@ public class QueryEditor extends DefaultTabView
      *
      * @param resultSet the executed result set
      */
-    public void setResultSet(ResultSet resultSet) throws SQLException {
+    public void setResultSet(ResultSet resultSet, DatabaseConnection dc) throws SQLException {
 
         if (!executeToFileCheckBox.isSelected()) {
-            resultsPanel.setResultSet(resultSet, true, getMaxRecords());
+            resultsPanel.setResultSet(resultSet, true, getMaxRecords(), dc);
             revalidate();
 
         } else
-            new QueryEditorResultsExporter(new ResultSetTableModel(resultSet, -1, false), getDisplayName());
+            new ExportDataPanel(resultSet, getDisplayName());
     }
 
     /**
@@ -631,12 +632,12 @@ public class QueryEditor extends DefaultTabView
      * @param resultSet the executed result set
      * @param query     the executed query of the result set
      */
-    public void setResultSet(ResultSet resultSet, String query) throws SQLException {
+    public void setResultSet(ResultSet resultSet, String query, DatabaseConnection dc) throws SQLException {
 
         if (!executeToFileCheckBox.isSelected())
-            resultsPanel.setResultSet(resultSet, true, getMaxRecords(), query);
+            resultsPanel.setResultSet(resultSet, true, getMaxRecords(), query, dc);
         else
-            new QueryEditorResultsExporter(new ResultSetTableModel(resultSet, -1, false), getDisplayName());
+            new ExportDataPanel(resultSet, getDisplayName());
     }
 
     public void destroyTable() {
@@ -1010,7 +1011,6 @@ public class QueryEditor extends DefaultTabView
         if (query == null)
             query = editorPanel.getQueryAreaText();
 
-        editorPanel.resetExecutingLine();
         boolean executeAsBlock = new SqlParser(query).isExecuteBlock();
         delegate.executeQuery(getSelectedConnection(), query, executeAsBlock, false, true);
     }
@@ -1023,8 +1023,6 @@ public class QueryEditor extends DefaultTabView
             if (query == null) {
                 query = editorPanel.getQueryAreaText();
             }
-
-            editorPanel.resetExecutingLine();
 
             for (DatabaseConnection dc : selectConnectionsPanel.getSelectedConnections()) {
                 preExecute(dc);
@@ -1060,8 +1058,6 @@ public class QueryEditor extends DefaultTabView
         if (script == null)
             script = editorPanel.getQueryAreaText();
 
-        editorPanel.resetExecutingLine();
-
         delegate.executeScript(getSelectedConnection(), script, false);
     }
 
@@ -1072,7 +1068,6 @@ public class QueryEditor extends DefaultTabView
         if (query == null)
             query = editorPanel.getQueryAreaText();
 
-        editorPanel.resetExecutingLine();
         boolean executeAsBlock = new SqlParser(query).isExecuteBlock();
         delegate.executeQueryInProfiler(getSelectedConnection(), query, executeAsBlock);
 
@@ -1085,7 +1080,6 @@ public class QueryEditor extends DefaultTabView
         if (MiscUtils.isNull(query))
             query = editorPanel.getQueryAreaText();
 
-        editorPanel.resetExecutingLine();
         delegate.printExecutedPlan(getSelectedConnection(), query, explained);
     }
 
@@ -1329,16 +1323,22 @@ public class QueryEditor extends DefaultTabView
 
         String text = editorPanel.getQueryAreaText();
         QueryEditorFileWriter writer = new QueryEditorFileWriter();
+        String oldAbsolutePath = scriptFile.getAbsolutePath();
         boolean saved = writer.write(text, scriptFile, saveAs);
-
         if (saved) {
 
             GUIUtilities.setTabTitleForComponent(this, getDisplayName());
-            statusBar.setStatus(" File saved to " + scriptFile.getFileName());
+            statusBar.setStatus(bundleString("FileSavedTo") + scriptFile.getFileName());
 
             isContentChanged = false;
         }
-
+        if (!scriptFile.getAbsolutePath().contentEquals(oldAbsolutePath)) {
+            String connectionID = (getSelectedConnection() != null) ?
+                    getSelectedConnection().getId() : QueryEditorHistory.NULL_CONNECTION;
+            QueryEditorHistory.PathNumber editor = QueryEditorHistory.getEditor(connectionID, oldAbsolutePath);
+            QueryEditorHistory.removeEditor(connectionID, oldAbsolutePath);
+            QueryEditorHistory.addEditor(connectionID, getAbsolutePath(), editor.number);
+        }
         return SaveFunction.SAVE_COMPLETE;
     }
 

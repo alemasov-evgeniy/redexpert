@@ -317,6 +317,7 @@ public class PrivilegesTablePanel extends JPanel implements ActionListener {
             public void keyReleased(KeyEvent e) {
                 act = CREATE_TABLE;
                 execute_thread();
+                filterField.requestFocusInWindow();
             }
         });
         invertFilterCheckBox = new JCheckBox();
@@ -431,7 +432,7 @@ public class PrivilegesTablePanel extends JPanel implements ActionListener {
         if (databaseConnection != null)
             ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(databaseConnection).setPauseLoadingTreeForSearch(!enable);
         if (grantManagerPanel != null)
-            grantManagerPanel.setEnableElements(enable);
+            grantManagerPanel.setElementsEnabled(enable);
     }
 
     void grantOnRole(int grant, int row, int col) {
@@ -746,7 +747,7 @@ public class PrivilegesTablePanel extends JPanel implements ActionListener {
                 try {
                     userMap = userManager.getUsers();
                     for (IFBUser u : userMap.values()) {
-                        users.add(createUser(u.getUserName()));
+                        users.add(createUser(u.getUserName(), u.getPlugin()));
                     }
 
                 } catch (Exception e) {
@@ -755,7 +756,7 @@ public class PrivilegesTablePanel extends JPanel implements ActionListener {
                 }
             }
         }
-        users.add(createUser("PUBLIC"));
+        users.add(createUser("PUBLIC", ""));
         return users;
     }
 
@@ -768,8 +769,19 @@ public class PrivilegesTablePanel extends JPanel implements ActionListener {
         return userManager;
     }
 
-    DefaultDatabaseUser createUser(String name) {
-        return new DefaultDatabaseUser(new DefaultDatabaseMetaTag(ConnectionsTreePanel.getPanelFromBrowser().getDefaultDatabaseHostFromConnection(databaseConnection), null, null, NamedObject.META_TYPES[NamedObject.USER]), name);
+    DefaultDatabaseUser createUser(String name, String plugin) {
+        return new DefaultDatabaseUser(
+                new DefaultDatabaseMetaTag(
+                        ConnectionsTreePanel
+                                .getPanelFromBrowser()
+                                .getDefaultDatabaseHostFromConnection(databaseConnection),
+                        null,
+                        null,
+                        NamedObject.META_TYPES[NamedObject.USER]
+                ),
+                name,
+                plugin
+        );
     }
 
     List<NamedObject> getRelationsFromType(int type) {
@@ -1094,23 +1106,33 @@ public class PrivilegesTablePanel extends JPanel implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == cancelButton)
+
+        if (e.getSource() == cancelButton) {
             setEnableElements(true);
-        else if (e.getSource() == refreshButton) {
+
+        } else if (e.getSource() == refreshButton) {
             act = CREATE_TABLE;
             execute_thread();
+
         } else if (e.getActionCommand() != null && e.getActionCommand().startsWith("field_")) {
             grantSomeForCol((RolloverButton) e.getSource());
+
         } else {
-            if (e.getSource() instanceof RolloverButton)
-                for (int i = 0; i < iconNames.length; i++)
+
+            if (e.getSource() instanceof RolloverButton) {
+                for (int i = 0; i < iconNames.length; i++) {
                     if (iconNames[i].equals(e.getActionCommand())) {
                         act = i;
                         break;
                     } else
                         act = CREATE_TABLE;
+                }
+            }
+
             execute_thread();
         }
+
+        ((Component) e.getSource()).requestFocusInWindow();
     }
 
     public void cleanup() {

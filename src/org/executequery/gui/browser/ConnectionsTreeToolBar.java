@@ -59,12 +59,16 @@ class ConnectionsTreeToolBar extends PanelToolBar {
     private JButton deleteConnectionButton;
 
     private JButton connectButton;
+    private JButton connectAllButton;
+    private JButton disconnectAllButton;
 
     private final ConnectionsTreePanel treePanel;
 
     private ImageIcon connectedIcon;
 
     private ImageIcon disconnectedIcon;
+    private ImageIcon connectedAllIcon;
+    private ImageIcon disconnectedAllIcon;
 
     public ConnectionsTreeToolBar(ConnectionsTreePanel treePanel) {
 
@@ -79,6 +83,14 @@ class ConnectionsTreeToolBar extends PanelToolBar {
         connectButton = addButton(treePanel, "connectDisconnect",
                 GUIUtilities.getAbsoluteIconPath("Connected.svg"),
                 Bundles.get("action.connect-to-database-command"));
+
+        connectAllButton = addButton(treePanel, "connectAll",
+                GUIUtilities.getAbsoluteIconPath("ConnectedAll.png"),
+                bundleString("connectAll"));
+
+        disconnectAllButton = addButton(treePanel, "disconnectAll",
+                GUIUtilities.getAbsoluteIconPath("DisconnectedAll.png"),
+                bundleString("disconnectAll"));
 
         newConnectionButton = addButton(
                 treePanel, "newConnection",
@@ -107,7 +119,7 @@ class ConnectionsTreeToolBar extends PanelToolBar {
 
         reloadButton = addButton(
                 treePanel, "reloadSelection",
-//                GUIUtilities.getAbsoluteIconPath("Reload16.svg"), 
+//                GUIUtilities.getAbsoluteIconPath("Reload16.svg"),
                 GUIUtilities.getAbsoluteIconPath("Refresh16.svg"),
                 bundleString("reloadSelection"));
 
@@ -124,6 +136,8 @@ class ConnectionsTreeToolBar extends PanelToolBar {
                 bundleString("collapseAll"));
         connectedIcon = GUIUtilities.loadIcon("Connected.svg");
         disconnectedIcon = GUIUtilities.loadIcon("Disconnected.svg");
+        connectedAllIcon = GUIUtilities.loadIcon("ConnectedAll.png");
+        disconnectedAllIcon = GUIUtilities.loadIcon("DisconnectedAll.png");
 
     }
 

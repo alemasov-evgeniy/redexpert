@@ -207,11 +207,29 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
                     return;
                 }
 
-                while (!objects.get(i).getName().contentEquals(MiscUtils.trimEnd(rs.getString(1)))) {
-                    i++;
-                    if (i >= objects.size())
-                        throw new DataSourceException("Error load info for" + metaDataKey);
-                    first = true;
+                String userName = MiscUtils.trimEnd(rs.getString(1));
+                if (objects.get(i) instanceof DefaultDatabaseUser) {
+
+                    DefaultDatabaseUser user = (DefaultDatabaseUser) objects.get(i);
+                    String pluginName = MiscUtils.trimEnd(rs.getString("SEC$PLUGIN"));
+
+                    while (!user.getName().contentEquals(userName) || !user.getPlugin().contentEquals(pluginName)) {
+
+                        i++;
+                        if (i >= objects.size())
+                            throw new DataSourceException("Error load info for " + metaDataKey);
+
+                        user = (DefaultDatabaseUser) objects.get(i);
+                        first = true;
+                    }
+
+                } else {
+                    while (!objects.get(i).getName().contentEquals(userName)) {
+                        i++;
+                        if (i >= objects.size())
+                            throw new DataSourceException("Error load info for " + metaDataKey);
+                        first = true;
+                    }
                 }
 
                 if (first) {
@@ -248,9 +266,8 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
 
         boolean first = true;
         DefaultStatementExecutor querySender = new DefaultStatementExecutor(getHost().getDatabaseConnection());
-        String query = ((AbstractDatabaseObject) objects.get(0)).getBuilderLoadColsForAllTables().getSQLQuery();
-
         try {
+            String query = ((AbstractDatabaseObject) objects.get(0)).getBuilderLoadColsForAllTables().getSQLQuery();
 
             InterruptibleThread thread = null;
             if (Thread.currentThread() instanceof InterruptibleThread)
@@ -309,8 +326,9 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
                 previousObject.setMarkedForReloadCols(false);
             }
 
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            if (getHost().isConnected())
+                throw new RuntimeException(e);
 
         } finally {
             querySender.releaseResources();
@@ -575,7 +593,7 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
             return list;
 
         } catch (SQLException e) {
-           e.printStackTrace();
+            e.printStackTrace();
             return new ArrayList<>();
 
         } finally {
@@ -726,7 +744,11 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
      * Loads the database users
      */
     private AbstractDatabaseObject getUser(ResultSet rs) throws SQLException {
-        return new DefaultDatabaseUser(this, rs.getObject(1).toString());
+        return new DefaultDatabaseUser(
+                this,
+                MiscUtils.trimEnd(rs.getObject(1).toString()),
+                MiscUtils.trimEnd(rs.getObject(2).toString())
+        );
     }
 
     /**
@@ -754,7 +776,7 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
      * Loads the database roles
      */
     private AbstractDatabaseObject getRole(ResultSet rs) throws SQLException {
-        return new DefaultDatabaseRole(this, rs.getObject(1).toString());
+        return new DefaultDatabaseRole(this, rs.getObject(1).toString(), rs.getObject(2).toString());
     }
 
     /**
@@ -773,17 +795,6 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
 
         DefaultDatabaseUDF udf = new DefaultDatabaseUDF(
                 this, MiscUtils.trimEnd(rs.getString(1)), this.getHost());
-
-        String moduleName = rs.getString(3);
-        if (!MiscUtils.isNull(moduleName))
-            udf.setModuleName(moduleName.trim());
-
-        String entryPoint = rs.getString(4);
-        if (!MiscUtils.isNull(entryPoint))
-            udf.setEntryPoint(entryPoint.trim());
-
-        udf.setReturnArg(rs.getInt(5));
-        udf.setRemarks(rs.getString("description"));
 
         return udf;
     }
@@ -955,7 +966,9 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
 
     private ResultSet getSystemRolesResultSet() throws SQLException {
 
-        String query = "SELECT CAST (RDB$ROLE_NAME as VARCHAR(1024))\n" +
+        String query = "SELECT\n" +
+                "CAST (RDB$ROLE_NAME as VARCHAR(1024)),\n" +
+                "RDB$OWNER_NAME AS OWNER_NAME\n" +
                 "FROM RDB$ROLES\n" +
                 "WHERE RDB$SYSTEM_FLAG != 0 AND RDB$SYSTEM_FLAG IS NOT NULL\n" +
                 "ORDER BY 1";
@@ -975,7 +988,11 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
 
     private ResultSet getUsersResultSet() throws SQLException {
 
-        String query = "SELECT CAST (SEC$USER_NAME as VARCHAR(1024)) FROM SEC$USERS ORDER BY 1";
+        String query = "SELECT\n" +
+                "CAST (SEC$USER_NAME as VARCHAR(1024)),\n" +
+                "SEC$PLUGIN\n" +
+                "FROM SEC$USERS\n" +
+                "ORDER BY 1,2";
 
         if (typeTree == TreePanel.DEPENDED_ON)
             query = getDependOnQuery(8);
@@ -987,7 +1004,9 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
 
     private ResultSet getRolesResultSet() throws SQLException {
 
-        String query = "SELECT CAST (RDB$ROLE_NAME as VARCHAR(1024))\n" +
+        String query = "SELECT\n" +
+                "CAST (RDB$ROLE_NAME as VARCHAR(1024)),\n" +
+                "RDB$OWNER_NAME AS OWNER_NAME\n" +
                 "FROM RDB$ROLES\n" +
                 "WHERE RDB$SYSTEM_FLAG = 0 OR RDB$SYSTEM_FLAG IS NULL\n" +
                 "ORDER BY 1";
@@ -1034,12 +1053,7 @@ public class DefaultDatabaseMetaTag extends AbstractNamedObject
     private ResultSet getUDFResultSet() throws SQLException {
 
         String query = "SELECT\n" +
-                "CAST (RDB$FUNCTION_NAME as VARCHAR(1024))," +
-                "RDB$DESCRIPTION," +
-                "RDB$MODULE_NAME," +
-                "RDB$ENTRYPOINT," +
-                "RDB$RETURN_ARGUMENT," +
-                "RDB$DESCRIPTION AS DESCRIPTION\n" +
+                "CAST (RDB$FUNCTION_NAME as VARCHAR(1024))\n" +
                 "FROM RDB$FUNCTIONS\n" +
                 ((getHost().getDatabaseMetaData().getDatabaseMajorVersion() == 2) ?
                         "WHERE RDB$SYSTEM_FLAG = 0 OR RDB$SYSTEM_FLAG IS NULL\n" :

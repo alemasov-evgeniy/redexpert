@@ -30,6 +30,7 @@ import org.underworldlabs.swing.layouts.GridBagHelper;
 import org.underworldlabs.util.DynamicLibraryLoader;
 import org.underworldlabs.util.FileUtils;
 import org.underworldlabs.util.MiscUtils;
+import org.underworldlabs.util.SystemProperties;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -395,7 +396,7 @@ public class CreateDatabasePanel extends ActionPanel
         advPropsPanel.add(scroller, gbh.get());
 
         // transaction isolation
-        txApplyButton = WidgetFactory.createInlineFieldButton(Bundles.get("common.apply.button"), "transactionLevelChanged");
+        txApplyButton = WidgetFactory.createInlineFieldButton("txApplyButton", Bundles.get("common.apply.button"), "transactionLevelChanged");
         txApplyButton.setToolTipText(bundledString("txApplyButton.tool-tip"));
         txApplyButton.setEnabled(false);
         txApplyButton.addActionListener(this);
@@ -632,10 +633,10 @@ public class CreateDatabasePanel extends ActionPanel
     private boolean connectionNameExists() {
 
         String name = nameField.getText().trim();
-        if (databaseConnectionRepository().nameExists(databaseConnection, name)) {
+        String folderId = databaseConnection != null ? databaseConnection.getFolderId() : "";
 
-            GUIUtilities.displayErrorMessage("The name [ " + name
-                    + " ] entered for this connection already exists");
+        if (databaseConnectionRepository().nameExists(databaseConnection, name, folderId)) {
+            GUIUtilities.displayErrorMessage(String.format(Bundles.get("ConnectionPanel.error.nameExist"), name));
             return true;
         }
 
@@ -717,6 +718,8 @@ public class CreateDatabasePanel extends ActionPanel
             }
 
         }
+
+        properties.setProperty("connectTimeout", String.valueOf(SystemProperties.getIntProperty("user", "connection.connect.timeout")));
 
         if (!properties.containsKey("lc_ctype"))
             properties.setProperty("lc_ctype", charsetsCombo.getSelectedItem().toString());
@@ -935,6 +938,8 @@ public class CreateDatabasePanel extends ActionPanel
             }
 
         }
+
+        properties.setProperty("connectTimeout", String.valueOf(SystemProperties.getIntProperty("user", "connection.connect.timeout")));
 
         if (!properties.containsKey("lc_ctype"))
             properties.setProperty("lc_ctype", charsetsCombo.getSelectedItem().toString());

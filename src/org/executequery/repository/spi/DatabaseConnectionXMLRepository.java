@@ -37,6 +37,7 @@ import org.xml.sax.SAXException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DatabaseConnectionXMLRepository extends AbstractXMLResourceReaderWriter<DatabaseConnection>
         implements DatabaseConnectionRepository {
@@ -56,12 +57,11 @@ public class DatabaseConnectionXMLRepository extends AbstractXMLResourceReaderWr
     public DatabaseConnection add(DatabaseConnection databaseConnection) {
 
         String name = databaseConnection.getName();
+        String folderId = databaseConnection.getFolderId();
 
         int count = 1;
-        while (nameExists(null, name)) {
-
+        while (nameExists(null, name, folderId))
             name += "_" + (count++);
-        }
 
         databaseConnection.setName(name);
         connections().add(databaseConnection);
@@ -83,20 +83,34 @@ public class DatabaseConnectionXMLRepository extends AbstractXMLResourceReaderWr
         return null;
     }
 
-    public DatabaseConnection findByName(String name) {
+    public DatabaseConnection find(String name, String folderId) {
 
         List<DatabaseConnection> _connections = connections();
         synchronized (_connections) {
 
-            for (DatabaseConnection connection : _connections) {
+            _connections = _connections.stream()
+                    .filter(conn -> Objects.equals(
+                            MiscUtils.getNulladbleString(conn.getFolderId()),
+                            MiscUtils.getNulladbleString(folderId))
+                    )
+                    .collect(Collectors.toList());
 
-                if (connection.getName().equals(name)) {
-
+            for (DatabaseConnection connection : _connections)
+                if (connection.getName().equals(name))
                     return connection;
-                }
+        }
 
-            }
+        return null;
+    }
 
+    @Override
+    public DatabaseConnection findByName(String name) {
+
+        List<DatabaseConnection> _connections = connections();
+        synchronized (_connections) {
+            for (DatabaseConnection connection : _connections)
+                if (connection.getName().equals(name))
+                    return connection;
         }
 
         return null;
@@ -121,11 +135,10 @@ public class DatabaseConnectionXMLRepository extends AbstractXMLResourceReaderWr
         return null;
     }
 
-    public boolean nameExists(DatabaseConnection exclude, String name) {
-
-        DatabaseConnection connection = findByName(name);
+    @Override
+    public boolean nameExists(DatabaseConnection exclude, String name, String folderId) {
+        DatabaseConnection connection = find(name, folderId);
         return connection != null && connection != exclude;
-
     }
 
     public synchronized void save() {
@@ -204,14 +217,10 @@ public class DatabaseConnectionXMLRepository extends AbstractXMLResourceReaderWr
     private boolean namesValid() {
 
         for (int i = 0; i < connections().size(); i++) {
+
             DatabaseConnection connection = connections().get(i);
-            if (nameExists(connection, connection.getName())) {
-
-                throw new RepositoryException(
-                        String.format("The connection name %s already exists.",
-                                connection.getName()));
-            }
-
+            if (nameExists(connection, connection.getName(), connection.getFolderId()))
+                throw new RepositoryException(String.format("The connection name %s already exists.", connection.getName()));
         }
 
         return true;

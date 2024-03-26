@@ -40,11 +40,12 @@ win32: {
     LIBS += -lcomdlg32
     RC_FILE += ResourceScript.rc
     HEADERS +=\
+           winlauncher.h \
            resource.h \
            unzip.h
     DISTFILES += ResourceScript.rc
     SOURCES +=\
-    unzip.cpp
+        unzip.cpp
     DEFINES += UNICODE
     DEFINES += _UNICODE
 }
@@ -66,8 +67,10 @@ else:unix: {
     QMAKE_CXXFLAGS += -std=c++0x
     LIBS += -ldl
     DISTFILES += \
-        resources/dialog_java_not_found.glade \
-        resources/download_dialog.glade
+        resources/dialog_java_not_found_en.glade \
+        resources/dialog_java_not_found_ru.glade \
+        resources/download_dialog_en.glade \
+        resources/download_dialog_ru.glade
 
 }
 
@@ -75,6 +78,8 @@ SOURCES += \
     main.cpp
 
 HEADERS += \
+    baselauncher.h \
+    linlauncher.h \
     JniError.h \
     JniString.h \
     PortableJni.h \

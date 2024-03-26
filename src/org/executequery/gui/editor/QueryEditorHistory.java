@@ -38,12 +38,27 @@ public class QueryEditorHistory {
     }
 
     public static void addEditor(String connectionID, PathNumber pathNumber) {
-        getEditors(connectionID).add(pathNumber);
-        if (pathNumber.number != -1) {
-            numbers().add(pathNumber.number);
-            saveNumbers();
+        List<PathNumber> paths = getEditors(connectionID);
+        boolean contains = false;
+        for (PathNumber path : paths)
+            if (path.path.contentEquals(pathNumber.path)) {
+                contains = true;
+                break;
+            }
+        if (!contains) {
+            getEditors(connectionID).add(pathNumber);
+            if (pathNumber.number != -1) {
+                numbers().add(pathNumber.number);
+                saveNumbers();
+            }
+            saveEditors();
         }
-        saveEditors();
+    }
+
+    public static PathNumber getEditor(String connectionID, String editor) {
+        List<PathNumber> editors = getEditors(connectionID);
+        int ind = indexOfEditor(editor, editors);
+        return editors.get(ind);
     }
 
     public static void removeEditor(String connectionID, String editor) {
@@ -137,7 +152,7 @@ public class QueryEditorHistory {
         editors = new HashMap<>();
         try {
             FileInputStream fstream = new FileInputStream(historyFile());
-            BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+            BufferedReader br = new BufferedReader(new InputStreamReader(fstream, SystemProperties.getProperty("user", "system.file.encoding")));
             String strLine;
             while ((strLine = br.readLine()) != null) {
                 String[] strings = strLine.split(";");
@@ -165,13 +180,18 @@ public class QueryEditorHistory {
     }
 
     private static void saveEditors() {
+        //Log.printStackTrace();
         try {
-            FileWriter writer = new FileWriter(historyFile(), false);
+            FileOutputStream fileOutputStream = new FileOutputStream(historyFile(), false);
+            Writer writer = new OutputStreamWriter(fileOutputStream, SystemProperties.getProperty("user", "system.file.encoding"));
+            //int g = 0;
             for (String key : editors().keySet()) {
                 List<PathNumber> list = editors().get(key);
                 for (int i = 0; i < list.size(); i++) {
+                    //Log.info(g+";"+i+";"+key+";"+list.get(i).path+";"+list.get(i).number);
                     writer.append(key + ";" + list.get(i).path + ";" + list.get(i).number + "\n");
                 }
+                //g++;
             }
             writer.flush();
         } catch (IOException e) {
@@ -261,6 +281,8 @@ public class QueryEditorHistory {
                             true);
                 } else {
                     QueryEditor queryEditor = new QueryEditor("", copy.get(i).path);
+                    if (connection != null)
+                        queryEditor.setSelectedConnection(connection);
                     GUIUtilities.addCentralPane(QueryEditor.TITLE,
                             QueryEditor.FRAME_ICON,
                             queryEditor,

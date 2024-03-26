@@ -43,8 +43,8 @@ public final class DerivedQuery {
 
     private List<QueryTable> queryTables;
 
-    private String endDelimiter;
-    private boolean isSetTerm;
+    private final String endDelimiter;
+    private final boolean isSetTerm;
 
     static {
 
@@ -198,18 +198,23 @@ public final class DerivedQuery {
         query = query.substring(firstOperator.length()).trim();
         int ind = indexSpace(query);
         metaName = query.substring(0, ind);
-        query = query.substring(metaName.length()).trim();
         metaName = metaName.trim();
         for (int i = 0; i < NamedObject.META_TYPES.length; i++)
-            if (metaName.equals(NamedObject.META_TYPES[i])) {
+            if (NamedObject.META_TYPES[i].startsWith(metaName)) {
                 typeObject = i;
+                metaName = NamedObject.META_TYPES[i];
+                if (i == NamedObject.GLOBAL_TEMPORARY)
+                    metaName = "GLOBAL TEMPORARY TABLE";
                 break;
             }
-
+        query = query.substring(metaName.length()).trim();
         ind = indexSpace(query);
         objectName = query.substring(0, ind);
-        if (objectName.startsWith("\"") && objectName.length() > 2)
-            objectName = objectName.substring(1, objectName.length() - 1);
+        if (objectName.startsWith("\"")) {
+            query = query.substring(1);
+            ind = query.indexOf("\"");
+            objectName = query.substring(0, ind);
+        }
         ind = queryWithoutComments.toUpperCase().indexOf(objectName);
         objectName = ind > -1 ? queryWithoutComments.substring(ind, objectName.length() + ind) : objectName;
     }
@@ -327,10 +332,12 @@ public final class DerivedQuery {
 
             type = QueryTypes.SET_AUTODDL_OFF;
 
-        } else if (query.indexOf("SET STATISTICS") == 0){
+        } else if (query.indexOf("SET STATISTICS") == 0) {
             type = QueryTypes.SET_STATISTICS;
-        }
-        else {
+        } else if (query.indexOf("DECLARE") == 0) {
+            type = QueryTypes.DECLARE_OBJECT;
+            setTypeObject(query, "DECLARE");
+        } else {
 
             type = QueryTypes.UNKNOWN;
         }

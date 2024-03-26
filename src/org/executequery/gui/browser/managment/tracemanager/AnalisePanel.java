@@ -11,6 +11,7 @@ import org.executequery.gui.text.SimpleSqlTextPanel;
 import org.executequery.localization.Bundles;
 import org.executequery.sql.SqlMessages;
 import org.underworldlabs.swing.*;
+import org.underworldlabs.swing.celleditor.picker.DefaultDateTimePicker;
 import org.underworldlabs.swing.layouts.GridBagHelper;
 import org.underworldlabs.swing.util.SwingWorker;
 
@@ -64,8 +65,8 @@ public class AnalisePanel extends JPanel {
             "EXECUTE_FUNCTION_START", "EXECUTE_PROCEDURE_FINISH", "EXECUTE_FUNCTION_FINISH", "EXECUTE_TRIGGER_START", "EXECUTE_TRIGGER_FINISH", "COMPILE_BLR",
             "EXECUTE_BLR", "EXECUTE_DYN", "ATTACH_SERVICE", "DETACH_SERVICE", "QUERY_SERVICE", "SWEEP_START", "SWEEP_FINISH", "SWEEP_FAILED", "SWEEP_PROGRESS"};
 
-    EQDateTimePicker startTimePicker;
-    EQDateTimePicker endTimePicker;
+    DefaultDateTimePicker startTimePicker;
+    DefaultDateTimePicker endTimePicker;
     TableRowSorter rowSorter;
     JCheckBox showPlanBox;
 
@@ -110,13 +111,28 @@ public class AnalisePanel extends JPanel {
     }
 
     AnaliseRow sumRow;
+    boolean terminate = false;
+
+    public boolean isTerminate() {
+        return terminate;
+    }
+
+    public void setTerminate(boolean terminate) {
+        this.terminate = terminate;
+    }
 
     void runRebuildRowsInThread() {
         SwingWorker sw = new SwingWorker("rebuildAuditAnalise") {
             @Override
             public Object construct() {
                 GUIUtilities.showWaitCursor();
-                rebuildRows();
+                try {
+                    rebuildRows();
+                } catch (Exception e) {
+                    if (!isTerminate())
+                        e.printStackTrace();
+                }
+                setTerminate(false);
                 return null;
             }
 
@@ -153,14 +169,14 @@ public class AnalisePanel extends JPanel {
                 if (index > messages.size())
                     return;
             }
-            startTimePicker.setDateTimePermissive(messages.get(index).getTimestamp().toLocalDateTime());
+            startTimePicker.setDateTime(messages.get(index).getTimestamp().toLocalDateTime());
             index = messages.size() - 1;
             while (messages.get(index).getTimestamp() == null) {
                 index--;
                 if (index < 0)
                     return;
             }
-            endTimePicker.setDateTimePermissive(messages.get(index).getTimestamp().toLocalDateTime());
+            endTimePicker.setDateTime(messages.get(index).getTimestamp().toLocalDateTime());
         }
     }
 
@@ -324,8 +340,8 @@ public class AnalisePanel extends JPanel {
                 rebuildRows();
             }
         });
-        startTimePicker = new EQDateTimePicker();
-        endTimePicker = new EQDateTimePicker();
+        startTimePicker = new DefaultDateTimePicker();
+        endTimePicker = new DefaultDateTimePicker();
         startTimePicker.setVisibleNullBox(false);
         endTimePicker.setVisibleNullBox(false);
         planPanel = new LoggingOutputPanel();
@@ -590,7 +606,7 @@ public class AnalisePanel extends JPanel {
         }
     }
 
-    class AnaliseSorter<M extends TableModel> extends TableRowSorter {
+    public static class AnaliseSorter<M extends TableModel> extends TableRowSorter {
         public AnaliseSorter(TableModel model) {
             super(model);
         }

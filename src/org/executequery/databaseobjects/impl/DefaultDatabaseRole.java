@@ -14,10 +14,15 @@ import java.sql.SQLException;
  * Created by vasiliy on 02.02.17.
  */
 public class DefaultDatabaseRole extends AbstractDatabaseObject {
-    public String name;
 
-    public DefaultDatabaseRole(DatabaseMetaTag metaTagParent, String name) {
+    private static final String OWNER_NAME = "OWNER_NAME";
+
+    public String name;
+    private String owner;
+
+    public DefaultDatabaseRole(DatabaseMetaTag metaTagParent, String name, String owner) {
         super(metaTagParent, name);
+        this.owner = owner;
     }
 
     @Override
@@ -60,7 +65,7 @@ public class DefaultDatabaseRole extends AbstractDatabaseObject {
     protected SelectBuilder builderCommonQuery() {
         SelectBuilder sb = new SelectBuilder(getHost().getDatabaseConnection());
         Table table = getMainTable();
-        sb.appendFields(table, getFieldName(), DESCRIPTION);
+        sb.appendFields(table, getFieldName(), DESCRIPTION, OWNER_NAME);
         sb.appendTable(table);
         sb.setOrdering(getObjectField().getFieldTable());
         return sb;
@@ -69,6 +74,7 @@ public class DefaultDatabaseRole extends AbstractDatabaseObject {
     @Override
     public Object setInfoFromSingleRowResultSet(ResultSet rs, boolean first) throws SQLException {
         setRemarks(getFromResultSet(rs, DESCRIPTION));
+        setOwner(getFromResultSet(rs, OWNER_NAME));
         return null;
     }
 
@@ -104,5 +110,13 @@ public class DefaultDatabaseRole extends AbstractDatabaseObject {
     @Override
     public boolean allowsChildren() {
         return false;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 }

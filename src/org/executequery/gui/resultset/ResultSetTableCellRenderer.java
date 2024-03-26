@@ -22,6 +22,7 @@ package org.executequery.gui.resultset;
 
 import org.executequery.Constants;
 import org.executequery.databaseobjects.Types;
+import org.executequery.localization.Bundles;
 import org.underworldlabs.util.MiscUtils;
 import org.underworldlabs.util.SystemProperties;
 
@@ -72,7 +73,12 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
     private Color alternatingRowBackground;
 
     private boolean otherColorForNull;
-    private boolean rightAlignNumeric;
+    private String alignNumeric;
+    private String alignText;
+    private String alignBool;
+    private String alignNull;
+    private String alignOther;
+
 
     private DateTimeFormatter dateFormat;
     private DateTimeFormatter timeFormat;
@@ -121,14 +127,56 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
                 break;
 
             default:
-                setHorizontalAlignment(SwingConstants.LEFT);
+                //setHorizontalAlignment(SwingConstants.LEFT);
                 break;
         }
 
     }
 
+    private void alignText(Object value) {
+
+        RecordDataItem recordDataItem = (RecordDataItem) value;
+        if (recordDataItem == null || recordDataItem.isDisplayValueNull())
+            return;
+
+        int sqlType = recordDataItem.getDataType();
+        switch (sqlType) {
+
+            case Types.VARCHAR:
+            case Types.LONGNVARCHAR:
+            case Types.CHAR:
+            case Types.CLOB:
+            case Types.NCHAR:
+            case Types.NCLOB:
+            case Types.NVARCHAR:
+                setHorizontalAlignment(SwingConstants.LEFT);
+                break;
+
+            default:
+                break;
+        }
+
+    }
+
+    protected void setAllign(String align) {
+        if (align != null) {
+            switch (align) {
+                case "left":
+                    setHorizontalAlignment(SwingConstants.LEFT);
+                    break;
+                case "right":
+                    setHorizontalAlignment(SwingConstants.RIGHT);
+                    break;
+                default:
+                    setHorizontalAlignment(SwingConstants.CENTER);
+                    break;
+            }
+        }
+    }
+
     private void formatValueForDisplay(Object value, boolean isSelected) {
 
+        setAllign(alignOther);
         if (value != null) {
             if (value instanceof RecordDataItem) {
 
@@ -180,11 +228,13 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
                 case Types.NVARCHAR:
                 case Types.CLOB:
                     color = charValueDisplayColor;
+                    setAllign(alignText);
                     break;
 
                 case Types.BIT:
                 case Types.BOOLEAN:
                     color = booleanValueDisplayColor;
+                    setAllign(alignBool);
                     break;
 
                 case Types.TINYINT:
@@ -198,6 +248,7 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
                 case Types.REAL:
                 case Types.DOUBLE:
                     color = numericValueDisplayColor;
+                    setAllign(alignNumeric);
                     break;
 
                 case Types.DATE:
@@ -248,7 +299,7 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
     private void formatForNullValue(boolean isSelected, boolean changed, boolean deleted, boolean newValue) {
 
         setValue(nullValueDisplayString);
-        setHorizontalAlignment(SwingConstants.CENTER);
+        setAllign(alignNull);
 
         if (!isSelected) {
 
@@ -279,8 +330,20 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
                 Constants.USER_PROPERTIES_KEY, "results.timestamp.pattern");
         timestampFormat = !MiscUtils.isNull(timestampPattern) ? DateTimeFormatter.ofPattern(timestampPattern) : null;
 
-        rightAlignNumeric = SystemProperties.getBooleanProperty(
-                Constants.USER_PROPERTIES_KEY, "results.table.right.align.numeric");
+        alignNumeric = getAlignKey(SystemProperties.getStringProperty(
+                Constants.USER_PROPERTIES_KEY, "results.table.align.numeric"));
+
+        alignText = getAlignKey(SystemProperties.getStringProperty(
+                Constants.USER_PROPERTIES_KEY, "results.table.align.text"));
+
+        alignBool = getAlignKey(SystemProperties.getStringProperty(
+                Constants.USER_PROPERTIES_KEY, "results.table.align.bool"));
+
+        alignNull = getAlignKey(SystemProperties.getStringProperty(
+                Constants.USER_PROPERTIES_KEY, "results.table.align.null"));
+
+        alignOther = getAlignKey(SystemProperties.getStringProperty(
+                Constants.USER_PROPERTIES_KEY, "results.table.align.other"));
 
         nullValueDisplayColor = SystemProperties.getColourProperty(
                 Constants.USER_PROPERTIES_KEY, "results.table.cell.null.background.colour");
@@ -382,9 +445,6 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
         isSelected = isSelected || row == table.getSelectedRow();
         formatValueForDisplay(value, isSelected);
 
-        if (rightAlignNumeric)
-            alignNumeric(value);
-
         return this;
     }
 
@@ -415,6 +475,16 @@ class ResultSetTableCellRenderer extends DefaultTableCellRenderer {
 
     @Override
     protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+    }
+
+    private String getAlignKey(String bundledValue) {
+
+        if (bundledValue.equals(Bundles.get("preferences.allign.right")))
+            return "right";
+        if (bundledValue.equals(Bundles.get("preferences.allign.left")))
+            return "left";
+
+        return "center";
     }
 
 }

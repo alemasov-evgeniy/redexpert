@@ -24,10 +24,10 @@ import biz.redsoft.IFBBlob;
 import biz.redsoft.IFBClob;
 import org.apache.commons.lang.StringUtils;
 import org.executequery.GUIUtilities;
-import org.executequery.databaseobjects.Types;
 import org.executequery.databasemediators.DatabaseConnection;
 import org.executequery.databasemediators.QueryTypes;
 import org.executequery.databasemediators.spi.DefaultStatementExecutor;
+import org.executequery.databaseobjects.Types;
 import org.executequery.datasource.PooledConnection;
 import org.executequery.datasource.PooledResultSet;
 import org.executequery.datasource.PooledStatement;
@@ -44,6 +44,7 @@ import org.underworldlabs.util.MiscUtils;
 import org.underworldlabs.util.SystemProperties;
 
 import javax.swing.*;
+import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -665,36 +666,52 @@ public class ResultSetTableModel extends AbstractSortableTableModel {
                     }
 
                 } catch (Exception e) {
-
                     try {
-
                         // ... and on dump, resort to string
                         value.setValue(resultSet.getString(i));
 
                     } catch (SQLException sqlException) {
-
                         // catch-all SQLException - yes, this is hideous
-
                         // noticed with invalid date formatted values in mysql
-
                         value.setValue("<Error - " + sqlException.getMessage() + ">");
                     }
                 }
 
-                if (resultSet.wasNull()) {
-
+                if (resultSet.wasNull())
                     value.setNull();
-                }
 
                 rowData.add(value);
-                if(value.getDisplayValue()!=null) {
-                    int width = fakeTable.getFontMetrics(fakeTable.getFont()).stringWidth(value.getDisplayValue().toString());
-                    if(width>header.getColWidth())
-                        header.setColWidth(width+5);
+                if (value.getDisplayValue() != null) {
+
+                    int width = -1;
+                    FontMetrics metrics = fakeTable.getFontMetrics(fakeTable.getFont());
+
+                    int valueType = value.getDataType();
+                    if (valueType == Types.DATE) {
+                        String stringValue = SystemProperties.getProperty("user", "results.date.pattern");
+                        if (stringValue != null)
+                            width = metrics.stringWidth(stringValue);
+
+                    } else if (valueType == Types.TIME) {
+                        String stringValue = SystemProperties.getProperty("user", "results.time.pattern");
+                        if (stringValue != null)
+                            width = metrics.stringWidth(stringValue);
+
+                    } else if (valueType == Types.TIMESTAMP) {
+                        String stringValue = SystemProperties.getProperty("user", "results.timestamp.pattern");
+                        if (stringValue != null)
+                            width = metrics.stringWidth(stringValue);
+                    }
+
+                    if (width < 0)
+                        width = metrics.stringWidth(value.getDisplayValue().toString());
+
+                    if (width > header.getColWidth())
+                        header.setColWidth(width + 5);
                 }
             }
 
-            tableData.add(rowData);
+        tableData.add(rowData);
     }
 
     public void cancelFetch() {
@@ -964,17 +981,19 @@ public class ResultSetTableModel extends AbstractSortableTableModel {
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        RecordDataItem recordDataItem = tableData.get(row).get(asVisibleColumnIndex(column));
+        if (isTable) {
+            RecordDataItem recordDataItem = tableData.get(row).get(asVisibleColumnIndex(column));
 
-        if (!visibleColumnHeaders.get(column).isEditable()) {
-            return recordDataItem.isNew() && cellsEditable;
-        }
-        if (recordDataItem.isBlob()) {
+            if (!visibleColumnHeaders.get(column).isEditable()) {
+                return recordDataItem.isNew() && cellsEditable;
+            }
+            if (recordDataItem.isBlob()) {
 
-            return false;
-        }
+                return false;
+            }
 
-        return cellsEditable;
+            return cellsEditable;
+        } else return false;
     }
 
     public void setNonEditableColumns(List<String> nonEditableColumns) {

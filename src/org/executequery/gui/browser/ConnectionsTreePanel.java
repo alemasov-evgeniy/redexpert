@@ -48,6 +48,7 @@ import org.underworldlabs.swing.GUIUtils;
 import org.underworldlabs.swing.toolbar.PanelToolBar;
 import org.underworldlabs.swing.tree.DynamicTree;
 import org.underworldlabs.swing.util.SwingWorker;
+import org.underworldlabs.util.MiscUtils;
 import org.underworldlabs.util.SystemProperties;
 
 import javax.swing.*;
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author Takis Diakoumis
@@ -756,12 +758,18 @@ public class ConnectionsTreePanel extends TreePanel
      */
     public void newConnection(DatabaseConnection dc) {
 
+        validateConnectionCopyName(dc);
         DatabaseHost host = databaseObjectFactory().createDatabaseHost(dc);
         connections.add(dc);
-        ConnectionsFolderNode folderNode = getSelectedFolderNode();
+
+        ConnectionsFolderNode folderNode = getFolderNodes().stream()
+                .filter(node -> Objects.equals(
+                        MiscUtils.getNulladbleString(node.getConnectionsFolder().getId()),
+                        MiscUtils.getNulladbleString(dc.getFolderId()))
+                )
+                .findFirst().orElse(null);
 
         if (folderNode != null) {
-
             final DatabaseHostNode hostNode = new DatabaseHostNode(host, folderNode);
             folderNode.addNewHostNode(hostNode);
             tree.nodesWereInserted(folderNode, new int[]{folderNode.getChildCount() - 1});
@@ -775,6 +783,38 @@ public class ConnectionsTreePanel extends TreePanel
         }
 
         connectionAdded(dc);
+    }
+
+    public void copyConnection(DatabaseConnection dc) {
+        validateConnectionCopyName(dc);
+        connections.add(dc);
+        connectionAdded(dc);
+    }
+
+    private void validateConnectionCopyName(DatabaseConnection dc) {
+
+        List<String> sameNamesSuffixes = connections.stream()
+                .filter(conn -> Objects.equals(
+                        MiscUtils.getNulladbleString(conn.getFolderId()),
+                        MiscUtils.getNulladbleString(dc.getFolderId()))
+                )
+                .map(DatabaseConnection::getName)
+                .filter(name -> name.startsWith(dc.getName()))
+                .map(name -> name.substring(dc.getName().length()))
+                .collect(Collectors.toList());
+
+        String newName = dc.getName();
+        if (!sameNamesSuffixes.isEmpty()) {
+            for (int i = 0; i < sameNamesSuffixes.size() + 1; i++) {
+                String suffix = i == 0 ? " (Copy)" : " (Copy " + i + ")";
+                if (!sameNamesSuffixes.contains(suffix)) {
+                    newName = dc.getName() + suffix;
+                    break;
+                }
+            }
+        }
+
+        dc.setName(newName);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -1178,7 +1218,9 @@ public class ConnectionsTreePanel extends TreePanel
 
     @Override
     public synchronized void valueChanged(DatabaseObjectNode node) {
-        if (node.getDatabaseObject().getParent().getType() != NamedObject.PACKAGE)
+
+        NamedObject parent = node.getDatabaseObject().getParent();
+        if (parent != null && parent.getType() != NamedObject.PACKAGE)
             controller.valueChanged(node, null);
     }
 
@@ -1222,6 +1264,18 @@ public class ConnectionsTreePanel extends TreePanel
                 tree.expandPath(path);
 
             pathChanged(oldSelectionPath, path);
+
+            // --- reload panel view ---
+
+            String type = "";
+            if (node.getType() < NamedObject.META_TYPES.length)
+                type = NamedObject.META_TYPES[node.getType()];
+
+            String title = MiscUtils.trimEnd(node.getShortName()) + ":" + type + ":" + getDatabaseConnection(node).getName();
+            if (GUIUtilities.isPanelOpen(title)) {
+                GUIUtilities.closeTab(title);
+                valueChanged(node, null);
+            }
 
         } finally {
             GUIUtilities.showNormalCursor();

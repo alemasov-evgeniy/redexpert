@@ -48,6 +48,7 @@ import org.underworldlabs.swing.actions.ActionUtilities;
 import org.underworldlabs.swing.layouts.GridBagHelper;
 import org.underworldlabs.util.FileUtils;
 import org.underworldlabs.util.MiscUtils;
+import org.underworldlabs.util.SystemProperties;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -806,10 +807,7 @@ public class ConnectionPanel extends AbstractConnectionPanel
     }
 
     private boolean connectionNameExists() {
-
-        String name = nameField.getText().trim();
-        return databaseConnectionRepository().nameExists(databaseConnection, name);
-
+        return databaseConnectionRepository().nameExists(databaseConnection, nameField.getText().trim(), databaseConnection.getFolderId());
     }
 
     private DatabaseConnectionRepository databaseConnectionRepository() {
@@ -1005,8 +1003,7 @@ public class ConnectionPanel extends AbstractConnectionPanel
     private void checkNameUpdate() {
 
         if (connectionNameExists()) {
-            GUIUtilities.displayErrorMessage(bundleString("error.nameExist1") + nameField.getText().trim()
-                    + bundleString("error.nameExist2"));
+            GUIUtilities.displayErrorMessage(String.format(bundleString("error.nameExist"), nameField.getText().trim()));
             focusNameField();
             return;
         }
@@ -1065,6 +1062,8 @@ public class ConnectionPanel extends AbstractConnectionPanel
             }
 
         }
+
+        properties.setProperty("connectTimeout", String.valueOf(SystemProperties.getIntProperty("user", "connection.connect.timeout")));
 
         if (!properties.containsKey("lc_ctype"))
             properties.setProperty("lc_ctype", charsetsCombo.getSelectedItem().toString());

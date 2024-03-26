@@ -45,7 +45,7 @@ public class ExportConnectionsPanelTwo extends ActionPanel {
 
         fileNameField = WidgetFactory.createTextField("fileNameField");
 
-        JButton button = WidgetFactory.createInlineFieldButton(Bundles.get("CreateTableFunctionPanel.BrowseButtonText"));
+        JButton button = WidgetFactory.createInlineFieldButton("browseButton", Bundles.get("CreateTableFunctionPanel.BrowseButtonText"));
         button.setActionCommand("browse");
         button.addActionListener(this);
         button.setMnemonic('r');
@@ -110,7 +110,7 @@ public class ExportConnectionsPanelTwo extends ActionPanel {
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setMultiSelectionEnabled(false);
 
-        fileChooser.setDialogTitle(Bundles.get("QueryEditorResultsExporter.SelectExportFilePath"));
+        fileChooser.setDialogTitle(Bundles.get("ExportDataPanel.SelectExportFilePath"));
         fileChooser.setDialogType(JFileChooser.OPEN_DIALOG);
 
         int result = fileChooser.showDialog(GUIUtilities.getInFocusDialogOrWindow(), Bundles.get("common.select.button"));

@@ -20,10 +20,13 @@
 
 package org.executequery.gui.browser.tree;
 
+import org.executequery.GUIUtilities;
 import org.executequery.components.table.BrowserTreeCellRenderer;
+import org.executequery.databasemediators.DatabaseConnection;
 import org.executequery.databasemediators.QueryTypes;
 import org.executequery.databasemediators.spi.DefaultStatementExecutor;
 import org.executequery.databaseobjects.NamedObject;
+import org.executequery.gui.browser.ConnectionsFolder;
 import org.executequery.gui.browser.ConnectionsTreePanel;
 import org.executequery.gui.browser.depend.DependPanel;
 import org.executequery.gui.browser.nodes.ConnectionsFolderNode;
@@ -49,9 +52,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Takis Diakoumis
@@ -272,6 +273,8 @@ public class SchemaTree extends DynamicTree
         DataFlavor nodesFlavor;
         DataFlavor[] flavors = new DataFlavor[1];
         DefaultMutableTreeNode[] nodesToRemove;
+        List<DatabaseConnection> hostToAdd = new ArrayList<>();
+        int currentAction = -1;
 
         public TreeTransferHandler() {
 
@@ -285,7 +288,6 @@ public class SchemaTree extends DynamicTree
             } catch (ClassNotFoundException e) {
                 Log.error("ClassNotFound: " + e.getMessage(), e);
             }
-
         }
 
         @Override
@@ -372,8 +374,12 @@ public class SchemaTree extends DynamicTree
 
         @Override
         public void exportAsDrag(JComponent comp, InputEvent e, int action) {
+
             if (loadingNode)
                 return;
+
+            hostToAdd.clear();
+            currentAction = action;
             super.exportAsDrag(comp, e, action);
         }
 
@@ -394,11 +400,14 @@ public class SchemaTree extends DynamicTree
                     if (!canDrag(node) || isExpanded(path))
                         return null;
 
-                    DefaultMutableTreeNode copy = ((DatabaseObjectNode) node).copy();
+                    DefaultMutableTreeNode copy = currentAction == 1 ?
+                            ((DatabaseObjectNode) node).copy() :
+                            ((DatabaseObjectNode) node).newInstance();
+
+                    if (copy instanceof DatabaseHostNode)
+                        hostToAdd.add(((DatabaseHostNode) copy).getDatabaseConnection());
                     copies.add(copy);
                     toRemove.add(node);
-
-
                 }
 
                 DefaultMutableTreeNode[] nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
@@ -416,23 +425,16 @@ public class SchemaTree extends DynamicTree
             return false;
         }
 
-        /**
-         * Defensive copy used in createTransferable.
-         */
-        private DefaultMutableTreeNode copy(TreeNode node) {
-            return new DefaultMutableTreeNode(node);
-        }
-
         @Override
         protected void exportDone(JComponent source, Transferable data, int action) {
 
             TreePath[] paths = getSelectionPaths();
             final Object lastPathComponent = paths[0].getLastPathComponent();
 
-            if ((action & MOVE) == MOVE) {
+            JTree tree = (JTree) source;
+            DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
 
-                JTree tree = (JTree) source;
-                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+            if ((action & MOVE) == MOVE) {
 
                 // Remove nodes saved in nodesToRemove in createTransferable.
                 if (nodesToRemove != null)
@@ -476,9 +478,39 @@ public class SchemaTree extends DynamicTree
                         }
                     }
                 });
-
             }
 
+            if (!hostToAdd.isEmpty()) {
+
+                ConnectionsTreePanel connectionsTreePanel = (ConnectionsTreePanel) GUIUtilities.getDockedTabComponent(ConnectionsTreePanel.PROPERTY_KEY);
+                if (connectionsTreePanel != null) {
+                    for (DatabaseConnection host : hostToAdd) {
+
+                        DatabaseObjectNode node = connectionsTreePanel.getHostNode(host);
+                        TreePath targetTreePath = node.getTreePath();
+
+                        Object parentNode = targetTreePath.getPathComponent(targetTreePath.getPathCount() - 2);
+                        if (parentNode instanceof ConnectionsFolderNode) {
+                            ConnectionsFolder connectionsFolder = ((ConnectionsFolderNode) parentNode).getConnectionsFolder();
+
+                            connectionsFolder.addConnection(host.getId());
+                            host.setFolderId(connectionsFolder.getId());
+
+                        } else
+                            host.setFolderId("");
+
+                        if (currentAction == 1)
+                            connectionsTreePanel.copyConnection(host);
+                    }
+                }
+
+                Set<TreePath> expandedNodes = new HashSet<>();
+                saveExpandedNodes(expandedNodes, tree, ((DefaultMutableTreeNode) model.getRoot()));
+                reload();
+                restoreExpandedNodes(expandedNodes, tree, ((DefaultMutableTreeNode) model.getRoot()));
+            }
+
+            currentAction = -1;
         }
 
         @Override
@@ -552,6 +584,30 @@ public class SchemaTree extends DynamicTree
                 model.insertNodeInto(node, parent, index++);
 
             return true;
+        }
+
+        private void saveExpandedNodes(Set<TreePath> expandedNodes, JTree tree, DefaultMutableTreeNode node) {
+
+            if (tree.isExpanded(new TreePath(node.getPath())))
+                expandedNodes.add(new TreePath(node.getPath()));
+
+            Enumeration<?> children = node.children();
+            while (children.hasMoreElements()) {
+                DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
+                saveExpandedNodes(expandedNodes, tree, child);
+            }
+        }
+
+        private void restoreExpandedNodes(Set<TreePath> expandedNodes, JTree tree, DefaultMutableTreeNode node) {
+
+            if (expandedNodes.contains(new TreePath(node.getPath())))
+                tree.expandPath(new TreePath(node.getPath()));
+
+            Enumeration<?> children = node.children();
+            while (children.hasMoreElements()) {
+                DefaultMutableTreeNode child = (DefaultMutableTreeNode) children.nextElement();
+                restoreExpandedNodes(expandedNodes, tree, child);
+            }
         }
 
         public class NodesTransferable implements Transferable {

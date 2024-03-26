@@ -43,7 +43,6 @@ import org.underworldlabs.util.DynamicLibraryLoader;
 import org.underworldlabs.util.MiscUtils;
 import org.underworldlabs.util.SystemProperties;
 
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
@@ -143,15 +142,7 @@ public class DefaultDatabaseHost extends AbstractNamedObject
 
     }
 
-    /**
-     * Closes the connection associated with this host.
-     */
-    public void close() {
-        schemas = null;
-        catalogs = null;
-        databaseMetaData = null;
-        connection = null;
-    }
+    Map<Object, Object> databaseProperties;
 
     /**
      * Returns the database connection wrapper object for this host.
@@ -221,13 +212,15 @@ public class DefaultDatabaseHost extends AbstractNamedObject
      *
      * @return the database meta data
      */
+    @Override
     public DatabaseMetaData getDatabaseMetaData() throws DataSourceException {
 
         if (!isConnected()) {
             if (!getDatabaseConnection().isConnected()) {
-                Log.info("Connection lost");
+                Log.debug("Connection lost");
                 return null;
-            } else throw new DataSourceException("Connection closed.", true);
+            } else
+                throw new DataSourceException("Connection closed.", true);
         }
 
         try {
@@ -249,6 +242,14 @@ public class DefaultDatabaseHost extends AbstractNamedObject
         }
 
         return databaseMetaData;
+    }
+
+    /**
+     * Returns copy of this object
+     */
+    @Override
+    public NamedObject copy() {
+        return new DefaultDatabaseHost(databaseConnection.copy(), typeTree);
     }
 
     /**
@@ -1067,129 +1068,209 @@ public class DefaultDatabaseHost extends AbstractNamedObject
         return properties;
     }
 
+    /**
+     * Closes the connection associated with this host.
+     */
+    public void close() {
+        schemas = null;
+        catalogs = null;
+        databaseMetaData = null;
+        connection = null;
+        databaseProperties = null;
+    }
+
     @Override
     public Map<Object, Object> getDatabaseProperties() throws DataSourceException {
 
-        Map<Object, Object> properties = new HashMap<>();
+        boolean isFirebird3 = getDatabaseConnection().getMajorServerVersion() >= 3;
+        boolean isFirebird4 = getDatabaseConnection().getMajorServerVersion() >= 4;
+        boolean isRedDatabase5 = getDatabaseConnection().getMajorServerVersion() >= 5 && new DefaultDatabaseHost(getDatabaseConnection()).getDatabaseProductName().toLowerCase().contains("reddatabase");
 
-        try {
-
-            String query = "SELECT * FROM MON$DATABASE";
-            ResultSet rs = new DefaultStatementExecutor(getDatabaseConnection()).getResultSet(query).getResultSet();
-
-            properties.put(bundleString("ServerVersion"), getDatabaseProductNameVersion());
-            properties.put(bundleString("Driver"), getMetaProperties().get("DriverName") + " " + getMetaProperties().get("DriverVersion"));
-
-            if (rs.next()) {
-
-                // --- ods version ---
-
-                Object value = rs.getInt("MON$ODS_MAJOR") + "." + rs.getInt("MON$ODS_MINOR");
-                properties.put(bundleString("ODS_VERSION"), value);
-
-                // --- shutdown mode ---
-
-                value = rs.getInt("MON$SHUTDOWN_MODE");
-                if (value.equals(0))
-                    value = bundleString("onlineDatabase");
-                else if (value.equals(1))
-                    value = bundleString("multiUserShutdown");
-                else if (value.equals(2))
-                    value = bundleString("singleUserShutdown");
-                else
-                    value = bundleString("fullShutdown");
-
-                properties.put(bundleString("SHUTDOWN_MODE"), value);
-
-                // --- read/write mode ---
-
-                value = rs.getInt("MON$READ_ONLY");
-                value = value.equals(1) ? bundleString("readOnly") : bundleString("readWrite");
-                properties.put(bundleString("READ_ONLY"), value);
-
-                // --- writes mode ---
-
-                value = rs.getInt("MON$FORCED_WRITES");
-                value = value.equals(1) ? bundleString("forcedWrites") : bundleString("asynchronousWrite");
-                properties.put(bundleString("FORCED_WRITES"), value);
-
-                // --- db space management mode ---
-
-                value = rs.getInt("MON$RESERVE_SPACE");
-                value = value.equals(0) ? bundleString("fullSpace") : bundleString("reserveSpace");
-                properties.put(bundleString("RESERVE_SPACE"), value);
-
-                // --- db space management mode ---
-
-                value = rs.getInt("MON$BACKUP_STATE");
-                if (value.equals(0))
-                    value = bundleString("noBackup");
-                else if (value.equals(1))
-                    value = bundleString("blockedBackup");
-                else
-                    value = bundleString("activeBackup");
-                properties.put(bundleString("BACKUP_STATE"), value);
-
-                // --- db encrypt mode ---
-
-                if (new DefaultDatabaseHost(getDatabaseConnection()).getDatabaseProductName().toLowerCase().contains("reddatabase") &&
-                        getDatabaseConnection().getMajorServerVersion() >= 5) {
-
-                    value = rs.getInt("MON$CRYPT_STATE");
-                    if (value.equals(0))
-                        value = bundleString("noEncrypt");
-                    else if (value.equals(1))
-                        value = bundleString("encrypted");
-                    else
-                        value = bundleString("activeEncrypt");
-                    properties.put(bundleString("CRYPT_STATE"), value);
-                }
-
-                // --- db file name ---
-
-                value = rs.getString("MON$DATABASE_NAME");
-                properties.put(bundleString("DATABASE_NAME"), value);
-
-                // --- db file size ---
-
-                File dbFile = new File((String) value);
-                if (dbFile.exists())
-                    properties.put(bundleString("dbFileSize"), dbFile.length());
-
-                // --- db security mode ---
-
-                value = rs.getString("MON$SEC_DATABASE");
-                if (value.equals("Default"))
-                    value = bundleString("DefaultSecurity");
-                else if (value.equals("Self"))
-                    value = bundleString("SelfSecurity");
-                else
-                    value = bundleString("OtherSecurity");
-
-                properties.put(bundleString("SEC_DATABASE"), value);
-
-                // --- others ---
-
-                properties.put(bundleString("PAGE_SIZE"), rs.getInt("MON$PAGE_SIZE"));                      // db pages size
-                properties.put(bundleString("OLDEST_TRANSACTION"), rs.getInt("MON$OLDEST_TRANSACTION"));    // oldest transaction number
-                properties.put(bundleString("OLDEST_ACTIVE"), rs.getInt("MON$OLDEST_ACTIVE"));              // oldest active transaction number
-                properties.put(bundleString("OLDEST_SNAPSHOT"), rs.getInt("MON$OLDEST_SNAPSHOT"));          // snapshot transaction number
-                properties.put(bundleString("NEXT_TRANSACTION"), rs.getInt("MON$NEXT_TRANSACTION"));        // next transaction number
-                properties.put(bundleString("PAGE_BUFFERS"), rs.getInt("MON$PAGE_BUFFERS"));                // cached pages count
-                properties.put(bundleString("SQL_DIALECT"), rs.getInt("MON$SQL_DIALECT"));                  // SQL dialect
-                properties.put(bundleString("SWEEP_INTERVAL"), rs.getInt("MON$SWEEP_INTERVAL"));            // sweep interval
-                properties.put(bundleString("CREATION_DATE"), rs.getTimestamp("MON$CREATION_DATE"));        // db creation date
-                properties.put(bundleString("PAGES"), rs.getInt("MON$PAGES"));                              // db pages count
-                properties.put(bundleString("STAT_ID"), rs.getInt("MON$STAT_ID"));                          // statistics index
-                properties.put(bundleString("CRYPT_PAGE"), rs.getInt("MON$CRYPT_PAGE"));                    // now encrypted db pages
-                properties.put(bundleString("OWNER"), rs.getString("MON$OWNER"));                           // db owner name
-            }
-
-        } catch (SQLException e) {
-            Log.error("Error occurred loading database properties", e);
+        Table databaseTable = Table.createTable("MON$DATABASE", "D");
+        SelectBuilder sb = new SelectBuilder(getDatabaseConnection());
+        sb.appendTable(databaseTable);
+        sb.appendField(Field.createField(databaseTable, "MON$DATABASE_NAME", "DATABASE_NAME"));
+        sb.appendField(Field.createField(databaseTable, "MON$PAGE_SIZE", "PAGE_SIZE"));
+        sb.appendField(Field.createField(databaseTable, "MON$ODS_MAJOR", "ODS_MAJOR"));
+        sb.appendField(Field.createField(databaseTable, "MON$ODS_MINOR", "ODS_MINOR"));
+        sb.appendField(Field.createField(databaseTable, "MON$OLDEST_TRANSACTION", "OLDEST_TRANSACTION"));
+        sb.appendField(Field.createField(databaseTable, "MON$OLDEST_ACTIVE", "OLDEST_ACTIVE"));
+        sb.appendField(Field.createField(databaseTable, "MON$OLDEST_SNAPSHOT", "OLDEST_SNAPSHOT"));
+        sb.appendField(Field.createField(databaseTable, "MON$NEXT_TRANSACTION", "NEXT_TRANSACTION"));
+        sb.appendField(Field.createField(databaseTable, "MON$PAGE_BUFFERS", "PAGE_BUFFERS"));
+        sb.appendField(Field.createField(databaseTable, "MON$SQL_DIALECT", "SQL_DIALECT"));
+        sb.appendField(Field.createField(databaseTable, "MON$SHUTDOWN_MODE", "SHUTDOWN_MODE"));
+        sb.appendField(Field.createField(databaseTable, "MON$SWEEP_INTERVAL", "SWEEP_INTERVAL"));
+        sb.appendField(Field.createField(databaseTable, "MON$READ_ONLY", "READ_ONLY"));
+        sb.appendField(Field.createField(databaseTable, "MON$FORCED_WRITES", "FORCED_WRITES"));
+        sb.appendField(Field.createField(databaseTable, "MON$RESERVE_SPACE", "RESERVE_SPACE"));
+        sb.appendField(Field.createField(databaseTable, "MON$CREATION_DATE", "CREATION_DATE").setStatement("CAST(MON$CREATION_DATE AS TIMESTAMP)"));
+        sb.appendField(Field.createField(databaseTable, "MON$PAGES", "PAGES"));
+        sb.appendField(Field.createField(databaseTable, "MON$STAT_ID", "STAT_ID"));
+        sb.appendField(Field.createField(databaseTable, "MON$BACKUP_STATE", "BACKUP_STATE"));
+        if (isFirebird3) {
+            sb.appendField(Field.createField(databaseTable, "MON$CRYPT_PAGE", "CRYPT_PAGE"));
+            sb.appendField(Field.createField(databaseTable, "MON$OWNER", "OWNER"));
+            sb.appendField(Field.createField(databaseTable, "MON$SEC_DATABASE", "SEC_DATABASE"));
+        }
+        if (isFirebird4) {
+            sb.appendField(Field.createField(databaseTable, "MON$GUID", "GUID"));
+            sb.appendField(Field.createField(databaseTable, "MON$FILE_ID", "FILE_ID"));
+            sb.appendField(Field.createField(databaseTable, "MON$REPLICA_MODE", "REPLICA_MODE"));
+            sb.appendField(Field.createField(databaseTable, "MON$NEXT_STATEMENT", "NEXT_STATEMENT"));
+            sb.appendField(Field.createField(databaseTable, "MON$NEXT_ATTACHMENT", "NEXT_ATTACHMENT"));
+        }
+        if (isRedDatabase5) {
+            sb.appendField(Field.createField(databaseTable, "MON$CRYPT_STATE", "CRYPT_STATE"));
         }
 
-        return properties;
+        if (databaseProperties == null) {
+            databaseProperties = new HashMap<>();
+
+            try {
+                ResultSet rs = new DefaultStatementExecutor(getDatabaseConnection()).getResultSet(sb.getSQLQuery()).getResultSet();
+
+                databaseProperties.put(bundleString("ServerVersion"), getDatabaseProductNameVersion());
+                databaseProperties.put(bundleString("Driver"), getMetaProperties().get("DriverName") + " " + getMetaProperties().get("DriverVersion"));
+
+                if (rs != null && rs.next()) {
+
+                    // --- ods version ---
+
+                    Object value = rs.getInt("ODS_MAJOR") + "." + rs.getInt("ODS_MINOR");
+                    databaseProperties.put(bundleString("ODS_VERSION"), value);
+
+                    // --- shutdown mode ---
+
+                    value = rs.getInt("SHUTDOWN_MODE");
+                    if (value.equals(0))
+                        value = bundleString("onlineDatabase");
+                    else if (value.equals(1))
+                        value = bundleString("multiUserShutdown");
+                    else if (value.equals(2))
+                        value = bundleString("singleUserShutdown");
+                    else
+                        value = bundleString("fullShutdown");
+
+                    databaseProperties.put(bundleString("SHUTDOWN_MODE"), value);
+
+                    // --- read/write mode ---
+
+                    value = rs.getInt("READ_ONLY");
+                    value = value.equals(1) ? bundleString("readOnly") : bundleString("readWrite");
+                    databaseProperties.put(bundleString("READ_ONLY"), value);
+
+                    // --- writes mode ---
+
+                    value = rs.getInt("FORCED_WRITES");
+                    value = value.equals(1) ? bundleString("forcedWrites") : bundleString("asynchronousWrite");
+                    databaseProperties.put(bundleString("FORCED_WRITES"), value);
+
+                    // --- db space management mode ---
+
+                    value = rs.getInt("RESERVE_SPACE");
+                    value = value.equals(0) ? bundleString("fullSpace") : bundleString("reserveSpace");
+                    databaseProperties.put(bundleString("RESERVE_SPACE"), value);
+
+                    // --- db space management mode ---
+
+                    value = rs.getInt("BACKUP_STATE");
+                    if (value.equals(0))
+                        value = bundleString("noBackup");
+                    else if (value.equals(1))
+                        value = bundleString("blockedBackup");
+                    else
+                        value = bundleString("activeBackup");
+
+                    databaseProperties.put(bundleString("BACKUP_STATE"), value);
+
+                    // --- db file size ---
+
+                    long pageSize = rs.getLong("PAGE_SIZE");    // db pages size
+                    long pagesCount = rs.getLong("PAGES");      // db pages count
+
+                    databaseProperties.put(bundleString("PAGE_SIZE"), pageSize);
+                    databaseProperties.put(bundleString("PAGES"), pagesCount);
+                    databaseProperties.put(bundleString("dbFileSize"), pageSize * pagesCount);
+
+                    // --- db security mode ---
+
+                    if (isFirebird3) {
+
+                        value = rs.getString("SEC_DATABASE");
+                        if (value.equals("Default"))
+                            value = bundleString("DefaultSecurity");
+                        else if (value.equals("Self"))
+                            value = bundleString("SelfSecurity");
+                        else
+                            value = bundleString("OtherSecurity");
+
+                        databaseProperties.put(bundleString("SEC_DATABASE"), value);
+                    }
+
+                    // --- db encrypt mode ---
+
+                    if (isFirebird4) {
+
+                        value = rs.getInt("REPLICA_MODE");
+                        if (value.equals(0))
+                            value = bundleString("notReplica");
+                        else if (value.equals(1))
+                            value = bundleString("read-onlyReplica");
+                        else
+                            value = bundleString("read-writeReplica");
+
+                        databaseProperties.put(bundleString("REPLICA_MODE"), value);
+                    }
+
+                    // --- db encrypt mode ---
+
+                    if (isRedDatabase5) {
+
+                        value = rs.getInt("CRYPT_STATE");
+                        if (value.equals(0))
+                            value = bundleString("noEncrypt");
+                        else if (value.equals(1))
+                            value = bundleString("encrypted");
+                        else
+                            value = bundleString("activeEncrypt");
+
+                        databaseProperties.put(bundleString("CRYPT_STATE"), value);
+                    }
+
+                    // --- others ---
+
+                    databaseProperties.put(bundleString("DATABASE_NAME"), rs.getString("DATABASE_NAME"));           //  db file name
+                    databaseProperties.put(bundleString("OLDEST_TRANSACTION"), rs.getInt("OLDEST_TRANSACTION"));    // oldest transaction number
+                    databaseProperties.put(bundleString("OLDEST_ACTIVE"), rs.getInt("OLDEST_ACTIVE"));              // oldest active transaction number
+                    databaseProperties.put(bundleString("OLDEST_SNAPSHOT"), rs.getInt("OLDEST_SNAPSHOT"));          // snapshot transaction number
+                    databaseProperties.put(bundleString("NEXT_TRANSACTION"), rs.getInt("NEXT_TRANSACTION"));        // next transaction number
+                    databaseProperties.put(bundleString("PAGE_BUFFERS"), rs.getInt("PAGE_BUFFERS"));                // cached pages count
+                    databaseProperties.put(bundleString("SQL_DIALECT"), rs.getInt("SQL_DIALECT"));                  // SQL dialect
+                    databaseProperties.put(bundleString("SWEEP_INTERVAL"), rs.getInt("SWEEP_INTERVAL"));            // sweep interval
+                    databaseProperties.put(bundleString("CREATION_DATE"), rs.getTimestamp("CREATION_DATE"));        // db creation date
+                    databaseProperties.put(bundleString("STAT_ID"), rs.getInt("STAT_ID"));                          // statistics index
+                    if (isFirebird3) {
+                        databaseProperties.put(bundleString("CRYPT_PAGE"), rs.getInt("CRYPT_PAGE"));                // now encrypted db pages
+                        databaseProperties.put(bundleString("OWNER"), rs.getString("OWNER"));                       // db owner name
+                    }
+                    if (isFirebird4) {
+                        databaseProperties.put(bundleString("GUID"), rs.getString("GUID"));                         // db GUID
+                        databaseProperties.put(bundleString("FILE_ID"), rs.getString("FILE_ID"));                   // db file id
+                        databaseProperties.put(bundleString("NEXT_STATEMENT"), rs.getString("NEXT_STATEMENT"));     // next statement ID counter
+                        databaseProperties.put(bundleString("NEXT_ATTACHMENT"), rs.getString("NEXT_ATTACHMENT"));   // next attachment ID counter
+                    }
+
+                } else {
+                    Log.error("Warning about loading database properties: the resultSet is null or empty");
+                }
+
+            } catch (SQLException e) {
+                Log.error("Error occurred loading database properties", e);
+            }
+        }
+
+        return databaseProperties;
     }
 
     public boolean supportsCatalogsInTableDefinitions() {
@@ -1425,6 +1506,15 @@ public class DefaultDatabaseHost extends AbstractNamedObject
                 return metaTag.getObjects();
         }
         return null;
+    }
+
+    public void reloadMetaTag(int type) {
+        for (DatabaseMetaTag metaTag : getMetaObjects()) {
+            if (metaTag.getMetaDataKey().equals(NamedObject.META_TYPES[type])) {
+                metaTag.reset();
+                return;
+            }
+        }
     }
 
     public List<String> getDatabaseObjectNamesForMetaTag(String metadatakey) {

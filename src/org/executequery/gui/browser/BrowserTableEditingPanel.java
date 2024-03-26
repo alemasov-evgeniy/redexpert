@@ -431,12 +431,16 @@ public class BrowserTableEditingPanel extends AbstractFormObjectViewPanel
             return;
 
         if (descriptionTable.getSelectedRow() >= 0) {
+
             int row = ((TableSorter) descriptionTable.getModel()).modelIndex(descriptionTable.getSelectedRow());
             DatabaseColumn column = descriptionTable.getDatabaseTableModel().getDatabaseColumns().get(row);
             BaseDialog dialog = new BaseDialog(InsertColumnPanel.EDIT_TITLE, true);
             InsertColumnPanel panel = new InsertColumnPanel(table, dialog, column);
+
             dialog.addDisplayComponent(panel);
             dialog.display();
+            table.reset();
+            reloadView();
         }
     }
 
@@ -1059,6 +1063,7 @@ public class BrowserTableEditingPanel extends AbstractFormObjectViewPanel
         } else if (tabIndex == TABLE_TRIGGERS_INDEX) {
             dialog = new BaseDialog(CreateTriggerPanel.CREATE_TITLE, true);
             panelForDialog = new CreateTriggerPanel(table.getHost().getDatabaseConnection(), dialog, DefaultDatabaseTrigger.TABLE_TRIGGER, table.getName());
+            ((DefaultDatabaseHost) table.getHost()).reloadMetaTag(NamedObject.TRIGGER);
         }
 
         if (panelForDialog != null) {

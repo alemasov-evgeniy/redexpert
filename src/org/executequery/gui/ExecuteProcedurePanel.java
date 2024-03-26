@@ -166,6 +166,7 @@ public class ExecuteProcedurePanel extends DefaultTabViewActionPanel
         procedureCombo.addActionListener(this);
 
         resultsPanel = new QueryEditorResultsPanel();
+        resultsPanel.setVisible(false);
 
         arrangeComponents();
 
@@ -187,23 +188,12 @@ public class ExecuteProcedurePanel extends DefaultTabViewActionPanel
 
     private void arrangeComponents() {
 
-        // --- resultPanel ---
-
-        JPanel resultPanel = new JPanel(new BorderLayout());
-        resultPanel.add(resultsPanel, BorderLayout.CENTER);
-        resultPanel.setMinimumSize(new Dimension(0, 250));
-
-        // --- splitPane ---
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        splitPane.setResizeWeight(0.5);
-        splitPane.setTopComponent(new JScrollPane(table));
-        splitPane.setBottomComponent(resultPanel);
+        GridBagHelper ghb = new GridBagHelper()
+                .setInsets(5, 5, 5, 5)
+                .anchorNorthWest()
+                .fillBoth();
 
         // --- basePanel ---
-
-        GridBagHelper ghb = new GridBagHelper();
-        ghb.anchorNorthWest().setInsets(5, 5, 5, 5).fillBoth();
 
         JPanel basePanel = new JPanel(new GridBagLayout());
         basePanel.setBorder(BorderFactory.createEtchedBorder());
@@ -214,11 +204,12 @@ public class ExecuteProcedurePanel extends DefaultTabViewActionPanel
         ghb.addLabelFieldPair(basePanel, bundleString("ObjectName"), procedureCombo, null, true);
 
         // result splitPane
-        basePanel.add(splitPane, ghb.nextRowFirstCol().spanX().get());
+        basePanel.add(new JScrollPane(table), ghb.fillBoth().setMaxWeightY().nextRowFirstCol().spanX().get());
+        basePanel.add(resultsPanel, ghb.nextRowFirstCol().spanX().get());
 
         // execute button
         basePanel.add(ActionUtilities.createButton(this, Bundles.getCommon("execute"), "execute"),
-                ghb.nextRowFirstCol().anchorEast().fillNone().get());
+                ghb.nextRowFirstCol().setMinWeightY().anchorEast().fillNone().get());
 
         // --- main frame ---
 
@@ -341,6 +332,9 @@ public class ExecuteProcedurePanel extends DefaultTabViewActionPanel
      */
     public void execute() {
 
+        if (!resultsPanel.isVisible())
+            resultsPanel.setVisible(true);
+
         int selectedRow = table.getSelectedRow();
         int selectedColumn = table.getSelectedColumn();
 
@@ -427,7 +421,7 @@ public class ExecuteProcedurePanel extends DefaultTabViewActionPanel
                             setPlainMessage(key.toString() + " = " + results.get(key.toString()));
 
                     if (result.isResultSet())
-                        resultsPanel.setResultSet(result.getResultSet(), false, -1);
+                        resultsPanel.setResultSet(result.getResultSet(), false, -1, null);
 
                 } else
                     setErrorMessage(result.getErrorMessage());

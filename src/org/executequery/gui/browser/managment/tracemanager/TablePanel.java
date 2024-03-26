@@ -43,7 +43,7 @@ public class TablePanel extends JPanel {
 
     TableCounterModel tableCounterModel;
     SimpleSqlTextPanel txtFieldRawSql;
-    private ResultSetDataModel dataModel;
+    private TraceDataModel dataModel;
     private JComboBox<Filter.FilterType> comboBoxFilterType;
     private JComboBox<String> comboBoxFilterColumn;
     private JTextField txtFldSqlFilter;
@@ -86,7 +86,7 @@ public class TablePanel extends JPanel {
         ensureFileExists(filePathVisibleCols());
         try {
             String strCols = FileUtils.loadFile(filePathVisibleCols());
-            if (!MiscUtils.isNull(strCols)) {
+            if (!MiscUtils.isNull(strCols) && !strCols.trim().contentEquals("#Red Expert - User Defined System Properties")) {
                 String[] cols = strCols.split("\n");
                 columnsCheckPanel.removeAllAction();
                 for (int i = 0; i < cols.length; i++) {
@@ -142,7 +142,7 @@ public class TablePanel extends JPanel {
         dynamicComboBoxModel = new DynamicComboBoxModel();
         comboBoxFilterColumn.setModel(dynamicComboBoxModel);
         loadCols();
-        dataModel = new ResultSetDataModel(columnsCheckPanel, comboBoxFilterType, comboBoxFilterColumn, txtFldSqlFilter, matchCaseBox);
+        dataModel = new TraceDataModel(columnsCheckPanel, comboBoxFilterType, comboBoxFilterColumn, txtFldSqlFilter, matchCaseBox);
         table = new JTable(dataModel);
         tableCounterModel = new TableCounterModel();
         tableCounter = new JTable(tableCounterModel) {
@@ -166,7 +166,7 @@ public class TablePanel extends JPanel {
                 return tip;
             }
         };
-        tableCounter.addMouseListener(new TraceManagerPopupMenu(tableCounter));
+        tableCounter.addMouseListener(new ServiceManagerPopupMenu(tableCounter));
         loadWidthCols();
         table.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
             @Override
@@ -282,7 +282,7 @@ public class TablePanel extends JPanel {
             }
         });
 
-        table.addMouseListener(new TraceManagerPopupMenu(table));
+        table.addMouseListener(new ServiceManagerPopupMenu(table));
 
         table.addMouseListener(new MouseAdapter() {
             @Override
@@ -363,6 +363,7 @@ public class TablePanel extends JPanel {
 
     public void clearAll() {
         dataModel.clearAll();
+        txtFieldRawSql.setSQLText("");
     }
 
     public void cleanup() {
@@ -372,6 +373,28 @@ public class TablePanel extends JPanel {
 
     public int countRows() {
         return dataModel.getRowCount();
+    }
+
+    public int getSelectedRow() {
+        int row = table.getSelectedRow();
+        if (row >= 0)
+            row = table.convertRowIndexToModel(row);
+        return row;
+    }
+
+    public int getSelectedCol() {
+        int col = table.getSelectedColumn();
+        if (col >= 0)
+            col = table.convertColumnIndexToModel(col);
+        return col;
+    }
+
+    public void setSelectedRow(int row) {
+        table.getSelectionModel().setSelectionInterval(row, row);
+    }
+
+    public void setSelectedCol(int col) {
+        table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
     }
 
 

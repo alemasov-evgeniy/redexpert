@@ -132,7 +132,6 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
     private void init() {
 
         outputTextPane = new LoggingOutputPanel();
-        outputTextPane.setBorder(null);
 
         outputTabIcon = GUIUtilities.loadIcon("SystemOutput.svg", true);
         resultSetTabIcon = GUIUtilities.loadIcon("FrameIcon16.svg", true);
@@ -171,7 +170,7 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
         ResultSetTableModel model = transposedRowTableModelBuilder().transpose(resultSetTableModel, row);
 
         TransposedRowResultSetPanel resultSetPanel = new TransposedRowResultSetPanel(this, model);
-        addResultSetPanel(queryForModel(tableModel), model.getRowCount(), resultSetPanel);
+        addResultSetPanel(queryForModel(tableModel), model.getRowCount(), resultSetPanel, null);
     }
 
     public void filter(String pattern) {
@@ -187,7 +186,7 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
         ResultSetTableModel model = new ResultSetTableModel(selectedResultSetPanel.getResultSetTableModel().getColumnNames(), list);
 
         resultSetPanel.setResultSet(model, false);
-        addResultSetPanel(selectedResultSetPanel.getResultSetTableModel().getQuery(), model.getRowCount(), resultSetPanel, true);
+        addResultSetPanel(selectedResultSetPanel.getResultSetTableModel().getQuery(), model.getRowCount(), resultSetPanel, true, null);
     }
 
     private String queryForModel(TableModel tableModel) {
@@ -311,6 +310,7 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
      *
      * @param e - the event object
      */
+    @Override
     public void stateChanged(ChangeEvent e) {
 
         Component selectedComponent = getSelectedComponent();
@@ -320,11 +320,8 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
             resetEditorRowCount(rowCount);
         }
 
-        if (hasNoTabs()) {
-
+        if (hasNoTabs() && queryEditor != null)
             queryEditor.allResultTabsClosed();
-        }
-
     }
 
     /**
@@ -359,9 +356,9 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
      * @param showRowNumber - whether to return the result set row count
      * @param maxRecords    - the maximum records to return
      */
-    public int setResultSet(ResultSet rset, boolean showRowNumber, int maxRecords) throws SQLException {
+    public int setResultSet(ResultSet rset, boolean showRowNumber, int maxRecords, DatabaseConnection dc) throws SQLException {
 
-        return setResultSet(rset, showRowNumber, maxRecords, null);
+        return setResultSet(rset, showRowNumber, maxRecords, null, dc);
     }
 
     /**
@@ -372,7 +369,7 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
      * @param maxRecords    - the maximum records to return
      * @param query         - the executed query of the result set
      */
-    public synchronized int setResultSet(ResultSet rset, boolean showRowNumber, int maxRecords, String query) throws SQLException {
+    public synchronized int setResultSet(ResultSet rset, boolean showRowNumber, int maxRecords, String query, DatabaseConnection dc) throws SQLException {
 
         ResultSetTableModel model = new ResultSetTableModel(rset, maxRecords, query, false);
 
@@ -409,7 +406,7 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
 
                 resultSetTableColumnResizingManager.reinstate(table);
             }
-            addResultSetPanel(query, rowCount, panel);
+            addResultSetPanel(query, rowCount, panel, dc);
 
         }
 
@@ -435,17 +432,17 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
         resultSetTabTitleCounter++;
     }
 
-    private void addResultSetPanel(String query, int rowCount, final ResultSetPanel panel) {
+    private void addResultSetPanel(String query, int rowCount, final ResultSetPanel panel, DatabaseConnection dc) {
 
-        addResultSetPanel(query, rowCount, panel, false);
+        addResultSetPanel(query, rowCount, panel, false, dc);
     }
 
-    private void addResultSetPanel(String query, int rowCount, final ResultSetPanel panel, boolean filtered) {
+    private void addResultSetPanel(String query, int rowCount, final ResultSetPanel panel, boolean filtered, DatabaseConnection dc) {
 
         resetTabCount();
 
         String title = bundleString("ResultSetTitle") + resultSetTabTitleCounter
-                + (filtered ? " " + bundleString("ResultSetTitleFiltered") : "");
+                + (filtered ? " " + bundleString("ResultSetTitleFiltered") : "") + (dc == null ? "" : ":" + dc);
 
         if (useSingleResultSetTabs()) {
 
@@ -554,8 +551,19 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
     }
 
     private boolean hasNoTabs() {
-
         return getTabCount() == 0;
+    }
+
+    private boolean hasOutputTab() {
+
+        if (hasNoTabs())
+            return false;
+
+        for (int i =0; i < getTabCount(); i++)
+            if (getTitleAt(0).equals(OUTPUT_TAB_TITLE))
+                return true;
+
+        return false;
     }
 
     public void setResultBackground(Color colour) {
@@ -696,6 +704,10 @@ public class QueryEditorResultsPanel extends SimpleCloseTabbedPane
     }
 
     protected void appendOutput(int type, String text) {
+
+        if (!hasOutputTab())
+            addTextOutputTab();
+
         outputTextPane.append(type, text);
     }
 
