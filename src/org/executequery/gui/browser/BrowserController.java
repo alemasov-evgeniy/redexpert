@@ -117,9 +117,8 @@ public class BrowserController {
 
         String title = (viewPanel.getNameObject() != null) ? viewPanel.getNameObject() : BrowserViewPanel.TITLE;
 
-        JPanel _viewPanel = GUIUtilities.getCentralPane(title);
-        if (_viewPanel == null) {
-            GUIUtilities.addCentralPane(title, viewPanel.getIcon(), viewPanel, title, true);
+        if (GUIUtilities.getCentralPane(title) == null) {
+            GUIUtilities.addCentralPane(title, BrowserViewPanel.FRAME_ICON, viewPanel, title, true);
             ConnectionHistory.add(viewPanel.getCurrentView());
         } else
             GUIUtilities.setSelectedCentralPane(title);
@@ -201,7 +200,6 @@ public class BrowserController {
 
             panel.setDatabaseConnection(connection);
             viewPanel.setView(panel);
-            viewPanel.setIcon(IconManager.getInstance().getIconFromNode(node));
             checkBrowserPanel();
 
             if (viewPanel.getCurrentView() != null)

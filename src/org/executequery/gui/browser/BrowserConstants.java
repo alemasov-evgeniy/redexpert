@@ -235,8 +235,7 @@ public class BrowserConstants {
             DB_TRIGGER_IMAGE,
             DDL_TRIGGER_IMAGE,
             SYSTEM_PACKAGE_IMAGE,
-            SYSTEM_SEQUENCES_IMAGE,
-            COLLATION_IMAGE
+            SYSTEM_SEQUENCES_IMAGE
     };
 
     private static String bundleString(String key) {
