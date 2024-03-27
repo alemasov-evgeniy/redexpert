@@ -327,7 +327,7 @@
             accel-key="control shift ENTER"
             accel-editable="true"
             small-icon="/org/executequery/icons/Executings16.svg"
-            large-icon="/org/executequery/icons/Execute24z.png"
+            large-icon="/org/executequery/icons/Execute24.svg"
             execute-class="org.executequery.actions.queryeditor.ExecuteInAnyConnectionsCommand"/>
 
     <action id="execute-as-block-command"
