@@ -22,6 +22,7 @@ package org.executequery.util;
 
 import org.apache.commons.lang.math.NumberUtils;
 import org.executequery.ApplicationException;
+import org.executequery.ApplicationLauncher;
 import org.executequery.plaf.ExecuteQueryTheme;
 import org.executequery.plaf.LookAndFeelType;
 import org.underworldlabs.swing.plaf.RedExpertFlatDarkLookAndFeel;
@@ -40,6 +41,9 @@ public final class LookAndFeelLoader {
     public LookAndFeelType loadLookAndFeel(String lookAndFeelType) {
 
         if (NumberUtils.isDigits(lookAndFeelType)) {
+
+            ApplicationLauncher launcher = new ApplicationLauncher();
+            launcher.startup();
 
             // legacy numeric setting - default to EQ L&F
 
