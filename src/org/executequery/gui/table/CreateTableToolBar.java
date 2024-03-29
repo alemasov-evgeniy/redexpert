@@ -117,7 +117,7 @@ public class CreateTableToolBar extends JPanel implements ActionListener {
         );
 
         GridBagHelper gbh = new GridBagHelper();
-        gbh.anchorNorth().setInsets(0, 0, 0, 1);
+        gbh.anchorNorth().setInsets(0, 2, 0, 0);
 
         add(insertAfterButton, gbh.get());
         add(insertBeforeButton, gbh.nextRowFirstCol().get());
@@ -143,6 +143,7 @@ public class CreateTableToolBar extends JPanel implements ActionListener {
 
             add(moveUpButton, gbh.nextRowFirstCol().get());
             add(moveDownButton, gbh.nextRowFirstCol().get());
+            add(new JPanel(), gbh.nextRow().spanY().get());
         }
 
     }

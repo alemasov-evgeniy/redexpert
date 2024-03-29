@@ -78,6 +78,8 @@ public class IconUtilities {
             if (url != null) {
                 if (url.getPath().endsWith(".svg")) {
                     try {
+                        width = 18;
+                        height = 14;
                         BufferedImage image = SVGImage.fromSvg(url, width, height);
                         icon = new ImageIcon(image);
                     } catch (Exception e) {

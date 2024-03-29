@@ -144,7 +144,7 @@ public class CreateProcedureToolBar extends JPanel
                     null);
             add(moveUpButton, gbh.nextRow().get());
             add(moveDownButton, gbh.nextRow().get());
-//            add(new JPanel(), gbh.nextRow().spanY().get());
+            add(new JPanel(), gbh.nextRow().spanY().get());
         }
         
     }
