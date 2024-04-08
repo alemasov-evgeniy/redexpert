@@ -73,9 +73,7 @@ public class SplitPaneFactory {
     public boolean usesJavaSplitPane() {
 
         LookAndFeelType lookAndFeelType = GUIUtilities.getLookAndFeel();
-//        return lookAndFeelType == LookAndFeelType.PLUGIN || lookAndFeelType == LookAndFeelType.NATIVE
-//                || lookAndFeelType == LookAndFeelType.GTK;
-        return false;
+        return lookAndFeelType == LookAndFeelType.PLUGIN;
     }
 
 }

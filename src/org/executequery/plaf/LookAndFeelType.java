@@ -25,18 +25,8 @@ public enum LookAndFeelType {
 
     EXECUTE_QUERY("FlatIntelliJLaf"),
     EXECUTE_QUERY_DARK("FlatDarculaLaf"),
-    OLD_THEME("Red Expert Old Theme");
-//    EXECUTE_QUERY_GRADIENT("Red Expert Default 3D"),
-//    SMOOTH_GRADIENT("Smooth Gradient"),
-//    BUMPY_GRADIENT("Bumpy Gradient"),
-//    EXECUTE_QUERY_THEME("Red Expert Theme"),
-//    METAL("Metal - Classic"),
-//    OCEAN("Metal - Ocean (JDK1.5+)"),
-//    WINDOWS("Windows"),
-//    MOTIF("CDE/Motif"),
-//    GTK("GTK+"),
-//    PLUGIN("Plugin"),
-//    NATIVE("Native");
+    OLD_THEME("Red Expert Old Theme"),
+    PLUGIN("Plugin");
 
     private String description;
 
@@ -63,12 +53,9 @@ public enum LookAndFeelType {
 
     public boolean isExecuteQueryLookCompatible() {
 
-        return (//this == SMOOTH_GRADIENT ||
-                //this == EXECUTE_QUERY_THEME ||
-                this == EXECUTE_QUERY ||
+        return (this == EXECUTE_QUERY ||
                 this == EXECUTE_QUERY_DARK ||
                 this == OLD_THEME);
-                //this == EXECUTE_QUERY_GRADIENT);
     }
 
 }

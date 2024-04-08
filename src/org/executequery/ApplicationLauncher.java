@@ -282,12 +282,20 @@ public class ApplicationLauncher {
     private void loadLookAndFeel(LookAndFeelLoader loader) {
 
         String lookAndFeel = userProperties().getStringProperty("startup.display.lookandfeel");
-        try {
-            if (!lookAndFeel.equals("EXECUTE_QUERY_DARK")) {
-                lookAndFeel = "EXECUTE_QUERY";
-            } else {
-                lookAndFeel = "EXECUTE_QUERY_DARK";
+        boolean flag = false;
+
+        for (LookAndFeelType type : LookAndFeelType.values()) {
+            if (type.name().equals(lookAndFeel)) {
+                flag = true;
+                break;
             }
+        }
+
+        if (!flag) {
+            lookAndFeel = LookAndFeelType.EXECUTE_QUERY.name();
+        }
+
+        try {
             LookAndFeelType lookAndFeelType = loader.loadLookAndFeel(lookAndFeel);
             userProperties().setStringProperty("startup.display.lookandfeel", lookAndFeelType.name());
 

@@ -61,6 +61,9 @@ public final class LookAndFeelLoader {
             case EXECUTE_QUERY_DARK:
                 loadDarkEQLookAndFeel();
                 break;
+            case PLUGIN:
+                loadCustomLookAndFeel();
+                break;
             case OLD_THEME:
                   loadOldTheme();
                   break;
