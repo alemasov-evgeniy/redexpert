@@ -25,7 +25,7 @@
             mnemonic="O"
             small-icon="/org/executequery/icons/Open16.svg"
             large-icon="/org/executequery/icons/Open24.svg"
-            accel-key="control L"
+            accel-key="control O"
             accel-editable="true"
             execute-class="org.executequery.actions.filecommands.OpenCommand"/>
 
@@ -198,7 +198,7 @@
             mnemonic="R"
             small-icon="/org/executequery/icons/Redo16.svg"
             large-icon="/org/executequery/icons/Redo24.svg"
-            accel-key="control Y"
+            accel-key="control shift Z"
             accel-editable="false"
             description="Redo the last action"
             execute-class="org.executequery.actions.editcommands.RedoCommand"/>

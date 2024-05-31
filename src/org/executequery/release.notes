@@ -233,7 +233,7 @@ Fixed:
 22.	Creating a database with default charset
 23.	Flickering interface in privilege manager
 24.	Invalid representation of “DATE” type when exporting to SQL
-25.	Undo/redo (Ctrl+Z/Ctrl+Y) in the query editor
+25.	Undo/redo (Ctrl+Z/Ctrl+Shift+Z) in the query editor
 26.	Nonoptimal space usage by result set in query editor
 27.	Application hangs when opening objects
 
