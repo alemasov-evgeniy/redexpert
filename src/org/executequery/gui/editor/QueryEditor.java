@@ -286,7 +286,7 @@ public class QueryEditor extends DefaultTabView
 
         // --- tools panel ---
 
-        gbh = new GridBagHelper().setInsets(5, 5, 5, 5).anchorNorthWest().fillHorizontally();
+        gbh = new GridBagHelper().setInsets(5, 5, 5, 5).anchorNorthWest().fillBoth();
         toolsPanel.add(toolBar, gbh.spanX().get());
         toolsPanel.add(createLabel(Bundles.getCommon("connection"), 'C'), gbh.nextRowFirstCol().setMinWeightX().setWidth(1).get());
         toolsPanel.add(connectionsCombo, gbh.nextCol().setWeightX(0.5).get());

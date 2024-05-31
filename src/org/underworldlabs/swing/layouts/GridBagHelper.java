@@ -11,7 +11,8 @@ public class GridBagHelper {
     public static final GridBagConstraints DEFAULT_CONSTRAINTS = new GridBagConstraints(
             0, 0, 1, 1, 0, 0,
             GridBagConstraints.NORTHWEST,
-            GridBagConstraints.HORIZONTAL,
+//            GridBagConstraints.HORIZONTAL,
+            GridBagConstraints.VERTICAL,
             new Insets(5, 5, 5, 5), 0, 0);
 
 
@@ -290,7 +291,7 @@ public class GridBagHelper {
     }
 
     public GridBagHelper setLabelDefault() {
-        return setWidth(1).setHeight(1).setWeights(0, 0).fillNone();
+        return setWidth(1).setHeight(1).setWeights(0, 0).fillBoth();
     }
 
     public void insertEmptyRow(Container c, int height) {
