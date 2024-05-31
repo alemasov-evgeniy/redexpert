@@ -111,8 +111,7 @@ public class ListSelectionPanel extends ActionPanel
         JButton selectOneButton = ActionUtilities.createButton(
                 this,
                 "selectOneAction",
-//                    IconUtilities.loadDefaultIconResource("SelectOne16.svg", true),
-                IconUtilities.loadDefaultIconResource("Forward16.svg", true),
+                IconUtilities.loadDefaultIconResource("SelectOne16.svg", true),
                 bundleString("selectOneAction"));
 
         JButton selectAllButton = ActionUtilities.createButton(
@@ -120,6 +119,12 @@ public class ListSelectionPanel extends ActionPanel
                 "selectAllAction",
                 IconUtilities.loadDefaultIconResource("SelectAll16.svg", true),
                 bundleString("selectAllAction"));
+//        JButton selectAllButton = ActionUtilities.createToolbarButton(
+//                this,
+////                "removeAllAction",
+//                GUIUtilities.getAbsoluteIconPath("SelectAll16.svg"),
+//                bundleString("selectAllAction"),
+//                null);
 
         JButton removeOneButton = ActionUtilities.createButton(
                 this,
@@ -132,7 +137,15 @@ public class ListSelectionPanel extends ActionPanel
                 this,
                 "removeAllAction",
                 IconUtilities.loadDefaultIconResource("RemoveAll16.svg", true),
+//                GUIUtilities.getAbsoluteIconPath("RemoveAll16.svg"),
                 bundleString("removeAllAction"));
+//        JButton removeAllButton = ActionUtilities.createToolbarButton(
+//                this,
+////                "removeAllAction",
+//                GUIUtilities.getAbsoluteIconPath("RemoveAll16.svg"),
+//                bundleString("removeAllAction"),
+//                null
+//        );
 
         // reset the button insets
         Insets buttonInsets = UIManager.getInsets("Button.margin");
@@ -157,6 +170,7 @@ public class ListSelectionPanel extends ActionPanel
 
         JButton moveDownButton = ActionUtilities.createButton(
                 this,
+//                GUIUtilities.getAbsoluteIconPath("Down16.svg"),
                 "Down16.svg",
                 bundleString("moveSelectionDown"),
                 "moveSelectionDown");
@@ -164,6 +178,7 @@ public class ListSelectionPanel extends ActionPanel
 
         JButton movePageDownButton = ActionUtilities.createButton(
                 this,
+//                GUIUtilities.getAbsoluteIconPath("DownDown16.svg"),
                 "DownDown16.svg",
                 bundleString("moveSelectionPageDown"),
                 "moveSelectionPageDown");

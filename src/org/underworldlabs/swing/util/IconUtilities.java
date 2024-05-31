@@ -78,8 +78,6 @@ public class IconUtilities {
             if (url != null) {
                 if (url.getPath().endsWith(".svg")) {
                     try {
-                        width = 18;
-                        height = 14;
                         BufferedImage image = SVGImage.fromSvg(url, width, height);
                         icon = new ImageIcon(image);
                     } catch (Exception e) {
@@ -114,12 +112,20 @@ public class IconUtilities {
         } else {
 
             URL url = IconUtilities.class.getResource(name);
-            if (url == null) {
+            if (url != null) {
+                if (url.getPath().endsWith(".svg")) {
+                    try {
+                        BufferedImage image = SVGImage.fromSvg(url, UserProperties.getInstance().getIntProperty("icons.size"), UserProperties.getInstance().getIntProperty("icons.size"));
+                        icon = new ImageIcon(image);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-                throw new RuntimeException("Icon at resource path not found: " +
-                        name);
+
+                } else
+                    icon = new ImageIcon(url);
+
             }
-            icon = new ImageIcon(url);
 
             if (store) {
                 icons.put(name, icon);
